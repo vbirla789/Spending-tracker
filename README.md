@@ -56,6 +56,8 @@ The ask field is one component across both states so it doesn't jump, and its tr
 
 The pill floats above the home indicator with a backdrop blur, since it sits over scrolling content — a flat white pill looks pasted on the moment a card slides under it. The scroller carries 84px of bottom padding so the last card clears it rather than ending underneath.
 
+**It hides on scroll down and returns on scroll up**, on the assumption that scrolling up means you're reaching for a control. It drops straight out of frame rather than fading in place, which would leave a ghost over the content. A 6px threshold ignores the jitter of a finger resting on the glass, and under 40px it always shows, so it can't get stranded off-screen at the top.
+
 ## Interaction spec
 
 ### Net worth — range pills and chart panning

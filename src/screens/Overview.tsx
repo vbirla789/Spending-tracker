@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AskSonarCard from "../components/AskSonarCard";
 import AskSonarFab from "../components/AskSonarFab";
 import CashFlowSection from "../components/CashFlowSection";
@@ -18,6 +18,23 @@ import { MaskProvider } from "../lib/mask";
  */
 export default function Overview({ onAsk }: { onAsk: (question: string) => void }) {
   const [hidden, setHidden] = useState(false);
+
+  /* Hide the floating pill while you're reading down the page, bring it back
+     the moment you scroll up — the pattern every content app uses, on the
+     assumption that scrolling up means you're looking for a control.
+     The 6px threshold ignores the jitter of a finger resting on the glass,
+     which would otherwise flicker it; under 40px it always shows, so it can't
+     get stranded off-screen at the top. */
+  const [fabVisible, setFabVisible] = useState(true);
+  const lastScroll = useRef(0);
+
+  function onScroll(e: React.UIEvent<HTMLElement>) {
+    const y = e.currentTarget.scrollTop;
+    const dy = y - lastScroll.current;
+    if (Math.abs(dy) < 6) return;
+    setFabVisible(dy < 0 || y < 40);
+    lastScroll.current = y;
+  }
 
   return (
     <div className="relative flex h-full w-full flex-col gap-[16px] overflow-hidden bg-canvas">
@@ -57,7 +74,10 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
 
       {/* pb clears the floating pill, so the last card can scroll past it
           instead of ending underneath it */}
-      <main className="phone-scroll safe-bottom relative flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] pb-[84px]">
+      <main
+        onScroll={onScroll}
+        className="phone-scroll safe-bottom relative flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] pb-[84px]"
+      >
         <MaskProvider hidden={hidden}>
           <NetWorthCard />
           <CashFlowSection />
@@ -71,7 +91,7 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
 
       {/* Empty string opens Sonar at its intro screen rather than with a
           question already asked — see App. */}
-      <AskSonarFab onOpen={() => onAsk("")} />
+      <AskSonarFab onOpen={() => onAsk("")} visible={fabVisible} />
 
       <HomeBar />
     </div>

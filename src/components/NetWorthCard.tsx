@@ -39,8 +39,11 @@ export default function NetWorthCard() {
   const pct = (delta / first) * 100;
 
   const W = Math.max(MIN_W, series.length * PX_PER_POINT);
-  // A little headroom above the peak so the line never touches the card edge.
-  const points = project(series, W, H, { padTop: 14, padBottom: 2 });
+  /* Headroom above the peak, and a deeper floor below the trough. The floor
+     is what the range pills overlap into — the line stops at y=150 so the
+     bottom 20px is pure wash, and the pills can sit on it without ever
+     covering the plot. */
+  const points = project(series, W, H, { padTop: 14, padBottom: 20 });
 
   /* Open on the right edge — today is the part anyone wants first, and the
      rest is history you choose to go back through. Layout effect so the jump
@@ -102,10 +105,12 @@ export default function NetWorthCard() {
                 pills read as a detached row. */}
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3648C9" stopOpacity="0.47" />
-              <stop offset="55%" stopColor="#3648C9" stopOpacity="0.2" />
-              {/* fades out against the canvas — keep in step with
-                  --color-canvas, which SVG can't read from a CSS variable */}
-              <stop offset="100%" stopColor="#FAFAFC" stopOpacity="0" />
+              <stop offset="55%" stopColor="#3648C9" stopOpacity="0.22" />
+              {/* Stops at 0.09 rather than 0. The wash has to still be
+                  visible where the pills sit, or they read as a detached row
+                  again — and the pills overlap the last 16px, so there's no
+                  hard edge where the gradient ends. */}
+              <stop offset="100%" stopColor="#3648C9" stopOpacity="0.09" />
             </linearGradient>
           </defs>
           {/* keyed on range so the path re-mounts and re-draws on switch */}
@@ -142,7 +147,10 @@ export default function NetWorthCard() {
           it, but the row runs clean off both screen edges once you scroll
           rather than stopping short of them. */}
       <div
-        className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pt-[2px]"
+        /* Pulled up onto the chart's wash. The selected pill's backdrop-blur
+           only means anything when there's something behind it, which is the
+           arrangement the Figma's blur value implies. */
+        className="rail relative -mx-[20px] -mt-[16px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px]"
         role="tablist"
         aria-label="Net worth range"
       >
