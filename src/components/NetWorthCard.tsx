@@ -1,0 +1,122 @@
+import { motion } from "framer-motion";
+import { useId, useState } from "react";
+import { NET_WORTH, RANGES, type Range } from "../data";
+import { areaPath, polyPath, project } from "../lib/chart";
+import { percent, rupees, signedRupees } from "../lib/format";
+import Money from "../lib/mask";
+import { useCountUp } from "../lib/useCountUp";
+import Pill from "./Pill";
+
+const W = 384;
+const H = 170;
+
+/**
+ * Net worth over a selectable window.
+ *
+ * The delta and its percentage are derived from the visible series — switch to
+ * 3Y and the headline change recalculates, because a "+₹800 (5.5%)" that never
+ * moves when the window does is just decoration.
+ */
+export default function NetWorthCard() {
+  const [range, setRange] = useState<Range>("1M");
+  const gradientId = useId();
+
+  const series = NET_WORTH[range];
+  const first = series[0];
+  const last = series[series.length - 1];
+  const delta = last - first;
+  const pct = (delta / first) * 100;
+
+  const shown = useCountUp(last);
+
+  // A little headroom above the peak so the line never touches the card edge.
+  const points = project(series, W, H, { padTop: 14, padBottom: 2 });
+
+  return (
+    <section className="flex w-full flex-col rounded-[12px]" aria-labelledby="nw-label">
+      <div className="flex w-full flex-col gap-[8px] py-[8px]">
+        <p
+          id="nw-label"
+          className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim"
+        >
+          Net worth
+        </p>
+        <Money
+          text={rupees(shown)}
+          className="tnum font-serif text-[32px] font-semibold leading-[1.3] text-black"
+        />
+        <div
+          className={[
+            "tnum flex items-center gap-[4px] font-mono text-[14px] font-medium leading-[1.4]",
+            delta >= 0 ? "text-gain" : "text-cat-grocery",
+          ].join(" ")}
+        >
+          <Money text={signedRupees(delta)} />
+          {/* The percentage stays visible while hidden — it gives no absolute
+              figure away, and something has to remain legible or the row
+              collapses to a row of dots. */}
+          <p>({percent(Math.abs(pct))})</p>
+        </div>
+      </div>
+
+      {/* Full-bleed: the chart is 384 wide inside a 375 screen, so it escapes
+          the 20px page gutter rather than being squeezed into it. */}
+      <div className="-mx-[20px] w-[calc(100%+40px)]">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="block h-[170px] w-full"
+          preserveAspectRatio="none"
+          role="img"
+          aria-label={`Net worth ${rupees(last)}, ${signedRupees(delta)} over ${range}`}
+        >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0F61FF" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#F9FAF7" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* keyed on range so the path re-mounts and re-draws on switch */}
+          <motion.path
+            key={`${range}-area`}
+            d={areaPath(points, H)}
+            fill={`url(#${gradientId})`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.32 }}
+          />
+          <motion.path
+            key={`${range}-line`}
+            /* Straight segments, not a curve — the day-to-day jaggedness is
+               the character of the Figma chart and smoothing it away made the
+               line look invented. */
+            d={polyPath(points)}
+            fill="none"
+            stroke="#0F61FF"
+            strokeWidth={1.5}
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 0.55, ease: [0.23, 1, 0.32, 1] }}
+          />
+        </svg>
+      </div>
+
+      {/* Six pills don't fit 375px, so they ride a scroll rail rather than
+          wrapping — wrapping would shift the card height per breakpoint. */}
+      <div
+        className="rail flex gap-[12px] overflow-x-auto pb-[16px] pr-[16px]"
+        role="tablist"
+        aria-label="Net worth range"
+      >
+        {RANGES.map((r) => (
+          <Pill key={r} role="tab" selected={r === range} onClick={() => setRange(r)}>
+            {/* fixed 51px pill from the Figma, so the six of them overflow the
+                gutter by exactly as much as they do in the file */}
+            <span className="block w-[29px] text-center">{r}</span>
+          </Pill>
+        ))}
+      </div>
+    </section>
+  );
+}

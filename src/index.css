@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+@theme {
+  /* Two type systems, straight from the Figma: mono carries every label and
+     control, serif carries every rupee figure. Nothing on this screen is set
+     in a plain UI sans — that contrast is what makes it read as a finance
+     document rather than a dashboard. */
+  --font-sans: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-serif: "IBM Plex Serif", Georgia, serif;
+
+  /* Surfaces */
+  --color-canvas: #f9faf7; /* screen background */
+  --color-card: #ffffff;
+  --color-hair: #f0f0f0; /* card + pill border, dividers */
+  --color-hair-icon: #ebebeb; /* the two circular header buttons */
+  --color-well: #fafaf8; /* inactive pill / month tile fill */
+
+  /* Ink */
+  --color-ink: #000000;
+  --color-ink-dim: #a3a3a3;
+  --color-gain: #01c86b; /* the +₹800 (5.5%) delta */
+
+  /* Cash flow bars. Dark green is money in, pale green is money out — the
+     pair repeats per month so the eye compares heights, not hues. */
+  --color-income: #035338;
+  --color-expense: #abd37a;
+
+  /* Habits donut. Four fixed hues so a category keeps its colour across
+     months; the legend swatch and the arc read from the same token. */
+  --color-cat-food: #bc932f;
+  --color-cat-travel: #00635d;
+  --color-cat-grocery: #fd7548;
+  --color-cat-other: #847dff;
+
+  /* Spend-vs-last-month line */
+  --color-series-current: #0f61ff;
+  --color-series-prior: #a3a3a3;
+
+  /* Motion. The built-in easings are too soft for a chart redraw — the value
+     should arrive decisively and settle, not drift. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100svh;
+}
+
+body {
+  font-family: var(--font-sans);
+  /* quiet stage behind the phone on desktop */
+  background: #e9eae6;
+  color: var(--color-ink);
+}
+
+/* Money is set in tabular figures so a redraw doesn't make the digits dance
+   while the count-up runs. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The range pills scroll horizontally on narrow phones rather than wrapping —
+   wrapping would push the chart down and break the card's fixed rhythm. */
+.rail {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.phone-scroll {
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.phone-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Skeleton-style shimmer for the privacy toggle: a pale band sweeps across
+   the figure as it changes.
+
+   Drawn as an overlay rather than a mask on the text. A mask leaves the
+   element partially transparent once the animation ends — `mask-position`
+   snaps back and part of the figure stays dimmed forever. This version fades
+   itself to nothing in its own last keyframe with `forwards`, so the resting
+   state is invisible by construction and needs no JS to clean up.
+
+   Two passes, then done: this is a transition, not a loading state. */
+@keyframes money-shimmer {
+  0% {
+    background-position: 150% 0;
+    opacity: 1;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    background-position: -50% 0;
+    opacity: 0;
+  }
+}
+
+.shimmer-host {
+  position: relative;
+  display: inline-block;
+}
+
+.shimmer-band {
+  position: absolute;
+  inset: -2px -5px;
+  pointer-events: none;
+  border-radius: 5px;
+  opacity: 0;
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 35%,
+    rgba(255, 255, 255, 0.94) 50%,
+    rgba(255, 255, 255, 0) 65%
+  );
+  background-size: 240% 100%;
+  background-repeat: no-repeat;
+  animation: money-shimmer 0.62s linear 2 forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-band {
+    animation: none;
+  }
+}
+
+/* The card elevation in the design is a 1px hairline plus a barely-there
+   drop shadow — not a blur. Kept as a utility so every card matches. */
+.card-shadow {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+/* On a real phone the device draws its own status bar and home indicator, so
+   the faux ones are redundant and the screen carries the safe-area insets
+   instead (the frame can't — full-bleed overlays resolve against it). */
+@media (max-width: 640px) {
+  .faux-status,
+  .faux-home-bar {
+    display: none;
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
