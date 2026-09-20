@@ -184,8 +184,10 @@ function EmptyState({
             SONAR AI
           </span>
         </div>
+        {/* The SONAR AI badge above already says what this is, so the headline
+            spends its line on the promise instead of repeating the label. */}
         <h1 className="w-[253px] text-center font-serif text-[32px] font-medium leading-[1.3] text-black">
-          Your Finance Agent
+          Every rupee, explained
         </h1>
         <ChatInput value={draft} onChange={setDraft} onSubmit={onSubmit} />
       </div>
