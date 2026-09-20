@@ -128,9 +128,14 @@ export default function NetWorthCard() {
       </div>
 
       {/* Six pills don't fit 375px, so they ride a scroll rail rather than
-          wrapping — wrapping would shift the card height per breakpoint. */}
+          wrapping — wrapping would shift the card height per breakpoint.
+
+          Full-bleed with the page gutter re-applied as padding, same as the
+          month tiles: at rest the first pill lines up with the content above
+          it, but the row runs clean off both screen edges once you scroll
+          rather than stopping short of them. */}
       <div
-        className="rail flex gap-[12px] overflow-x-auto pb-[16px] pr-[16px] pt-[8px]"
+        className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pb-[16px] pt-[8px]"
         role="tablist"
         aria-label="Net worth range"
       >
