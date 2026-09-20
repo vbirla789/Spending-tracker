@@ -4,7 +4,7 @@ import { CASH_FLOW } from "../data";
 import Money from "../lib/mask";
 
 /** Tallest bar in the design. Every bar is scaled against the same ceiling. */
-const BAR_MAX_PX = 59;
+const BAR_MAX_PX = 52;
 
 /**
  * Four months of money in vs money out.
@@ -65,7 +65,10 @@ export default function CashFlowSection() {
                 aria-selected={selected}
                 onClick={() => setActiveKey(month.key)}
                 className={[
-                  "flex h-[110px] shrink-0 flex-col items-center justify-end gap-[12px] overflow-hidden",
+                  // 78×104 from the Figma. justify-end pins the bars and label
+                  // to the bottom, so short months leave their headroom above
+                  // rather than floating mid-tile.
+                  "flex h-[104px] w-[78px] shrink-0 flex-col items-center justify-end gap-[8px] overflow-hidden",
                   "rounded-[8px] border bg-white px-[12px] pb-[8px] pt-[12px] transition-colors duration-150",
                   // Both states are white now; the border and the label carry
                   // the selection, same as the range pills.
@@ -81,13 +84,13 @@ export default function CashFlowSection() {
                   ].join(" ")}
                 >
                   <motion.div
-                    className="w-[24px] rounded-[4px] bg-income"
+                    className="w-[20px] rounded-[4px] bg-income"
                     initial={false}
                     animate={{ height: scale(month.income) }}
                     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                   />
                   <motion.div
-                    className="w-[24px] rounded-[4px] bg-expense"
+                    className="w-[20px] rounded-[4px] bg-expense"
                     initial={false}
                     animate={{ height: scale(month.expenses) }}
                     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
