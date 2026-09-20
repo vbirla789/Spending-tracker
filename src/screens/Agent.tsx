@@ -111,13 +111,17 @@ export default function Agent({
           <EmptyState onPick={ask} draft={draft} setDraft={setDraft} onSubmit={() => ask(draft)} />
         ) : (
           <>
-            {/* overflow-x-hidden is not cosmetic: `overflow-y: auto` makes
+            {/* The 20px above the thread is the same 20px as the gutter
+                beside it, so the first reply sits in an even margin rather
+                than in a band of its own.
+
+                overflow-x-hidden is not cosmetic: `overflow-y: auto` makes
                 the x axis auto too, so any child a pixel too wide turns the
                 whole thread into a horizontal scroller and the avatars clip
                 against the left edge. */}
             <div
               ref={thread}
-              className="phone-scroll mt-[40px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+              className="phone-scroll mt-[20px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
             >
               <div className="flex flex-col gap-[24px] pb-[16px]">
                 {turns.map((turn, i) => (
