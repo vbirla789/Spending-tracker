@@ -279,7 +279,7 @@ function Thinking() {
         <AnimatePresence mode="wait">
           <motion.p
             key={step}
-            className="font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-ink-dim"
+            className="font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-ink-dim"
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
