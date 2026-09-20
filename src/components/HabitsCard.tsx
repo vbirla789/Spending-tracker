@@ -67,7 +67,7 @@ export default function HabitsCard() {
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={`Month: ${month.label}. Change month`}
-                className="flex items-center justify-center gap-[4px] rounded-[40px] border border-hair py-[6px] pl-[12px] pr-[8px] font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[1px] text-black"
+                className="flex items-center justify-center gap-[4px] rounded-[40px] border border-hair py-[6px] pl-[12px] pr-[8px] font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[1px] text-black"
               >
                 {month.label}
                 <motion.img
@@ -100,7 +100,8 @@ export default function HabitsCard() {
                             setOpen(false);
                           }}
                           className={[
-                            "w-full px-[12px] py-[9px] text-left font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[1px]",
+                            // matches the trigger it drops out of
+                            "w-full px-[12px] py-[9px] text-left font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[1px]",
                             m.key === monthKey ? "bg-hair text-black" : "text-ink-dim",
                           ].join(" ")}
                         >
