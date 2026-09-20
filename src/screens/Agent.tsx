@@ -79,7 +79,7 @@ export default function Agent({
   }, [turns]);
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-canvas">
+    <div className="dot-paper relative flex h-full w-full flex-col">
       <div className="safe-top shrink-0">
         <StatusBar />
       </div>

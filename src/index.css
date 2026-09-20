@@ -111,6 +111,18 @@ button {
   display: none;
 }
 
+/* The agent screen's paper. The Figma draws this as a field of ~1.35px dots
+   on an 11.35px grid; reproduced as a gradient rather than the exported
+   asset, which ships as tens of thousands of individual ellipses.
+
+   It's what makes the white message bubbles legible — they read as clean
+   islands where the dots stop, not because they differ in colour. */
+.dot-paper {
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.11) 0.68px, transparent 0.68px);
+  background-size: 11.35px 11.35px;
+}
+
 /* The card elevation in the design is a 1px hairline plus a barely-there
    drop shadow — not a blur. Kept as a utility so every card matches. */
 .card-shadow {
