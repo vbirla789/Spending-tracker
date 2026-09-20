@@ -136,7 +136,7 @@ export default function NetWorthCard() {
           it, but the row runs clean off both screen edges once you scroll
           rather than stopping short of them. */}
       <div
-        className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pb-[16px] pt-[8px]"
+        className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pt-[8px]"
         role="tablist"
         aria-label="Net worth range"
       >
