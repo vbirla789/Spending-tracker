@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AskSonarCard from "../components/AskSonarCard";
 import CashFlowSection from "../components/CashFlowSection";
 import GridBackdrop from "../components/GridBackdrop";
 import HabitsCard from "../components/HabitsCard";
@@ -15,7 +16,7 @@ import { MaskProvider } from "../lib/mask";
  * the content column, then a 40px rhythm between the four sections. Only the
  * content column scrolls, so the header buttons stay reachable on a tall page.
  */
-export default function Overview() {
+export default function Overview({ onAsk }: { onAsk: (question: string) => void }) {
   const [hidden, setHidden] = useState(false);
 
   return (
@@ -58,6 +59,9 @@ export default function Overview() {
         <MaskProvider hidden={hidden}>
           <NetWorthCard />
           <CashFlowSection />
+          {/* The agent's only entry point, slotted where the Figma has it —
+              after the hard numbers, before the behavioural cards. */}
+          <AskSonarCard onAsk={onAsk} />
           <HabitsCard />
           <SpentThisMonthCard />
         </MaskProvider>

@@ -20,7 +20,22 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 | **Net worth** | ₹ figure, derived delta, area chart, six range pills |
 | **Cash flow** | A card: six month tiles (income vs expenses), then income / expenses / net |
 | **Habits** | Category donut with month picker and a derived legend |
+| **Question of the day** | The agent's touchpoint — a real question plus `Ask SONAR` |
 | **Spent this month** | This month against last month, scrubbable |
+
+## Sonar — the agent
+
+A second screen ([`1328:391858`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1328-391858)) that presents itself over the Overview like a sheet.
+
+**Empty state** — the orb, a `SONAR AI` chip, "Your Finance Agent", the ask field, and two rails of suggested prompts. The rails start pre-scrolled to *different* offsets (118px and 75px, from the Figma) so they read as a drifting field of prompts rather than a two-column table.
+
+**Conversation** — the opening question becomes the header title rather than being repeated as a bubble. Replies are unbubbled with the orb as an avatar; your own messages get a white card with a squared bottom-right corner. That asymmetry is the only speaker cue, so no colour or alignment work is needed.
+
+**Every answer is composed from `data.ts`**, not a string table — see `lib/agent.ts`. Ask "where did my money go?" and the reply names whichever category is actually largest and renders the real split; change a month's figures and the agent's wording and card change with them. An assistant that quotes a total the screen behind it disagrees with is worse than no assistant.
+
+The ask field is one component across both states so it doesn't jump, and its trailing button swaps mic → send the moment there's something to send.
+
+**Known gap:** nothing currently routes to the *empty* state — the home card always arrives with a question. It's one line (`setAgentQuestion("")`) once you decide where a second entry point lives.
 
 ## Interaction spec
 
