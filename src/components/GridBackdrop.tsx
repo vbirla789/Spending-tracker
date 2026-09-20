@@ -6,8 +6,10 @@
  * the exported assets, the squares are reproduced as positioned divs since
  * they're plain rectangles with per-block alpha.
  *
- * Effective opacity is 0.56 × 0.07 ≈ 4% — it should read as paper texture,
- * not as a chart behind the content.
+ * Effective opacity is 0.56 × 0.12 ≈ 6.7%. The Figma's 7% tile was too faint
+ * to survive the white cards sitting on it — the texture only showed in the
+ * gaps. Still well under the point where the ruled lines start reading as a
+ * chart behind the content rather than as paper.
  */
 
 const TILE_W = 400.423;
@@ -44,7 +46,7 @@ const BLOCKS: { x: number; y: number; w: number; h: number; a: number }[] = [
 
 function Tile() {
   return (
-    <div className="relative shrink-0 opacity-[0.07]" style={{ width: TILE_W, height: TILE_H }}>
+    <div className="relative shrink-0 opacity-[0.12]" style={{ width: TILE_W, height: TILE_H }}>
       {/* Ruled lines. The horizontal set is authored portrait and rotated,
           exactly as the component is set up in the file. */}
       <div
