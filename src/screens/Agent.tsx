@@ -312,8 +312,12 @@ function UserBubble({ text }: { text: string }) {
       transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
     >
       {/* Square bottom-right corner marks it as yours — the agent's replies
-          have no bubble at all, so the asymmetry is the only speaker cue. */}
-      <p className="card-shadow max-w-[287px] rounded-bl-[12px] rounded-tl-[12px] rounded-tr-[12px] bg-white p-[12px] font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+          have no bubble at all, so the asymmetry is the only speaker cue.
+
+          A wide, soft shadow rather than the 1px hairline the cards use: the
+          bubble is white on near-white paper, so without real lift it reads
+          as a gap in the dots instead of a thing sitting on top of them. */}
+      <p className="max-w-[287px] rounded-bl-[12px] rounded-tl-[12px] rounded-tr-[12px] bg-white p-[12px] font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black shadow-[0_8px_24px_-4px_rgba(47,48,55,0.12),0_2px_6px_-1px_rgba(34,42,53,0.08)]">
         {text}
       </p>
     </motion.div>
