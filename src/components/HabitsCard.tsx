@@ -56,7 +56,7 @@ export default function HabitsCard() {
       <div className="flex w-full flex-col gap-[16px] p-[16px]">
         <div className="flex w-full flex-col gap-[12px]">
           <div className="flex w-full items-center justify-between">
-            <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
+            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
               Habits
             </p>
 
@@ -150,7 +150,7 @@ export default function HabitsCard() {
                 value={total}
                 className="tnum font-serif text-[28px] font-semibold leading-[1.3] text-black"
               />
-              <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
+              <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
                 Spent in {month.label}
               </p>
             </div>
@@ -166,10 +166,10 @@ export default function HabitsCard() {
                       className="size-[12px] shrink-0 rounded-[2px]"
                       style={{ background: `var(${cat.token})` }}
                     />
-                    <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[0.6px] text-black">
+                    <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
                       {cat.label}
                     </p>
-                    <p className="tnum font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
+                    <p className="tnum font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
                       {Math.round((cat.amount / total) * 100)}%
                     </p>
                   </div>
