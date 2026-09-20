@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { useId, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { NET_WORTH, RANGES, type Range } from "../data";
-import { areaPath, polyPath, project } from "../lib/chart";
+import { polyPath, project } from "../lib/chart";
 import { percent, rupees, signedRupees } from "../lib/format";
 import Money from "../lib/mask";
 import Pill from "./Pill";
@@ -29,7 +29,6 @@ const MIN_W = 600;
  */
 export default function NetWorthCard() {
   const [range, setRange] = useState<Range>("1M");
-  const gradientId = useId();
   const scroller = useRef<HTMLDivElement>(null);
 
   const series = NET_WORTH[range];
@@ -39,11 +38,10 @@ export default function NetWorthCard() {
   const pct = (delta / first) * 100;
 
   const W = Math.max(MIN_W, series.length * PX_PER_POINT);
-  /* Headroom above the peak, and a deeper floor below the trough. The floor
-     is what the range pills overlap into — the line stops at y=150 so the
-     bottom 20px is pure wash, and the pills can sit on it without ever
-     covering the plot. */
-  const points = project(series, W, H, { padTop: 14, padBottom: 20 });
+  /* A little headroom top and bottom so the line never touches the edges of
+     its box. The floor used to be 20px to leave room for the wash the pills
+     sat on; with no fill the line can have the height back. */
+  const points = project(series, W, H, { padTop: 14, padBottom: 8 });
 
   /* Open on the right edge — today is the part anyone wants first, and the
      rest is history you choose to go back through. Layout effect so the jump
@@ -97,32 +95,10 @@ export default function NetWorthCard() {
           role="img"
           aria-label={`Net worth ${rupees(last)}, ${signedRupees(delta)} over ${range}`}
         >
-          <defs>
-            {/* Alpha stops measured off the Figma export (0.47 at the top,
-                0.32 at 22%, 0.135 at 55%), except the mid stop is held a
-                little higher so the wash still reaches the range pills — a
-                straight falloff left the bottom of the box empty and the
-                pills read as a detached row. */}
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3648C9" stopOpacity="0.47" />
-              <stop offset="50%" stopColor="#3648C9" stopOpacity="0.24" />
-              {/* Still tinted at 80%, which is where the pills sit, so they
-                  read as seated on the wash — then all the way out to zero by
-                  the bottom edge. Ending on any visible alpha leaves a hard
-                  line where the SVG stops. */}
-              <stop offset="80%" stopColor="#3648C9" stopOpacity="0.12" />
-              <stop offset="100%" stopColor="#3648C9" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {/* keyed on range so the path re-mounts and re-draws on switch */}
-          <motion.path
-            key={`${range}-area`}
-            d={areaPath(points, H)}
-            fill={`url(#${gradientId})`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.32 }}
-          />
+          {/* Line only, no fill. A wash under it competes with the eight
+              other coloured surfaces on this screen; the line alone is enough
+              to read a trend. Keyed on range so the path re-mounts and
+              re-draws on switch. */}
           <motion.path
             key={`${range}-line`}
             /* Straight segments, not a curve — the day-to-day jaggedness is
@@ -148,13 +124,12 @@ export default function NetWorthCard() {
           it, but the row runs clean off both screen edges once you scroll
           rather than stopping short of them. */}
       <div
-        /* Pulled up onto the chart's wash. The selected pill's backdrop-blur
-           only means anything when there's something behind it, which is the
-           arrangement the Figma's blur value implies. */
-        /* pb adds to the column's 24px gap, putting 36px between the pills and
-           the card below — the chart needs more air under it than two cards
-           need between them. */
-        className="rail relative -mx-[20px] -mt-[16px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pb-[12px]"
+        /* The row used to be pulled up onto the wash so it read as connected
+           to the chart. With a bare line there's nothing to sit on and no
+           seam to hide, so it goes back to plain space above. pb adds to the
+           column's 24px gap, putting 36px between the pills and the card
+           below. */
+        className="rail relative -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pb-[12px] pt-[16px]"
         role="tablist"
         aria-label="Net worth range"
       >
