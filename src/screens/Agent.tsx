@@ -123,7 +123,11 @@ export default function Agent({
               ref={thread}
               className="phone-scroll mt-[20px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
             >
-              <div className="flex flex-col gap-[24px] pb-[16px]">
+              {/* 36px between turns against 24px inside one, so a question
+                  reads as attached to its own answer and the break falls
+                  where the subject changes. Matching both at 24px was what
+                  made the thread feel like one undifferentiated column. */}
+              <div className="flex flex-col gap-[36px] pb-[16px]">
                 {turns.map((turn, i) => (
                   <div key={turn.id} className="flex flex-col gap-[24px]">
                     {/* The first question is already the header title, so it
