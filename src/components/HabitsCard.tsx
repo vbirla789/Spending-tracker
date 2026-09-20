@@ -4,7 +4,6 @@ import { HABITS, RING_ORDER } from "../data";
 import { donutArcs } from "../lib/chart";
 import { rupees, sum } from "../lib/format";
 import Money from "../lib/mask";
-import { useCountUp } from "../lib/useCountUp";
 
 const SIZE = 167;
 const STROKE = 18;
@@ -25,7 +24,6 @@ export default function HabitsCard() {
   const popover = useRef<HTMLDivElement>(null);
 
   const total = sum(month.categories.map((c) => c.amount));
-  const shownTotal = useCountUp(total);
 
   const ring = RING_ORDER.map((key) => month.categories.find((c) => c.key === key)!).filter(
     Boolean,
@@ -148,7 +146,7 @@ export default function HabitsCard() {
 
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4px]">
               <Money
-                text={rupees(shownTotal)}
+                value={total}
                 className="tnum font-serif text-[28px] font-semibold leading-[1.3] text-black"
               />
               <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
@@ -175,7 +173,7 @@ export default function HabitsCard() {
                     </p>
                   </div>
                   <Money
-                    text={rupees(cat.amount)}
+                    value={cat.amount}
                     className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
                   />
                 </div>

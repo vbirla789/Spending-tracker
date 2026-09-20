@@ -1,9 +1,7 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { CASH_FLOW } from "../data";
-import { rupees, signedRupees } from "../lib/format";
 import Money from "../lib/mask";
-import { useCountUp } from "../lib/useCountUp";
 
 /** Tallest bar in the design. Every bar is scaled against the same ceiling. */
 const BAR_MAX_PX = 59;
@@ -19,14 +17,19 @@ const BAR_MAX_PX = 59;
 export default function CashFlowSection() {
   const [activeKey, setActiveKey] = useState(CASH_FLOW[CASH_FLOW.length - 1].key);
   const active = CASH_FLOW.find((m) => m.key === activeKey) ?? CASH_FLOW[0];
+  const scroller = useRef<HTMLDivElement>(null);
 
   const ceiling = Math.max(...CASH_FLOW.flatMap((m) => [m.income, m.expenses]));
   const scale = (value: number) => Math.max(4, Math.round((value / ceiling) * BAR_MAX_PX));
 
   const net = active.income - active.expenses;
-  const shownIncome = useCountUp(active.income);
-  const shownExpenses = useCountUp(active.expenses);
-  const shownNet = useCountUp(net);
+
+  /* Open on the most recent month. Before paint, so it doesn't read as the
+     row scrolling itself on load. */
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
 
   return (
     <section className="flex w-full flex-col gap-[24px]" aria-labelledby="cf-label">
@@ -38,9 +41,16 @@ export default function CashFlowSection() {
       </p>
 
       <div className="flex flex-col gap-[32px]">
-        {/* The row is a scroll rail: four tiles fit at 375, more months would
-            simply extend it rather than shrinking the tiles. */}
-        <div className="rail flex justify-end gap-[16px] overflow-x-auto" role="tablist" aria-label="Month">
+        {/* Full-bleed scroll rail. It escapes the 20px page gutter on both
+            sides and carries no horizontal padding of its own, so tiles run
+            clean off each edge instead of stopping short of them — the row
+            reads as continuing past the screen rather than being boxed. */}
+        <div
+          ref={scroller}
+          className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[16px] overflow-x-auto"
+          role="tablist"
+          aria-label="Month"
+        >
           {CASH_FLOW.map((month) => {
             const selected = month.key === activeKey;
             return (
@@ -87,8 +97,10 @@ export default function CashFlowSection() {
 
         <div className="flex flex-col gap-[12px]">
           <div className="flex flex-col gap-[16px]">
-            <Row swatch="bg-income" label="Income" value={rupees(shownIncome)} />
-            <Row swatch="bg-expense" label="Expenses" value={`−${rupees(shownExpenses)}`} />
+            <Row swatch="bg-income" label="Income" value={active.income} />
+            {/* Negated so the figure itself carries the minus and NumberFlow
+                can roll it, rather than gluing a sign onto a positive. */}
+            <Row swatch="bg-expense" label="Expenses" value={-active.expenses} />
           </div>
           <div className="h-px w-full bg-hair" />
           <div className="flex w-full items-center justify-between">
@@ -96,7 +108,8 @@ export default function CashFlowSection() {
               Net cash flow
             </p>
             <Money
-              text={signedRupees(shownNet)}
+              value={net}
+              signed
               className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
             />
           </div>
@@ -106,7 +119,7 @@ export default function CashFlowSection() {
   );
 }
 
-function Row({ swatch, label, value }: { swatch: string; label: string; value: string }) {
+function Row({ swatch, label, value }: { swatch: string; label: string; value: number }) {
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-[8px]">
@@ -116,7 +129,7 @@ function Row({ swatch, label, value }: { swatch: string; label: string; value: s
         </p>
       </div>
       <Money
-        text={value}
+        value={value}
         className="tnum font-serif text-[14px] font-medium leading-[1.3] text-black"
       />
     </div>

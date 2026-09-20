@@ -73,7 +73,7 @@ export default function SpentThisMonthCard() {
         </div>
 
         <Money
-          text={rupees(headline)}
+          value={headline}
           className="tnum font-serif text-[28px] font-semibold leading-[1.3] text-black"
         />
 

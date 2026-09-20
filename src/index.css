@@ -98,58 +98,6 @@ button {
   display: none;
 }
 
-/* Skeleton-style shimmer for the privacy toggle: a pale band sweeps across
-   the figure as it changes.
-
-   Drawn as an overlay rather than a mask on the text. A mask leaves the
-   element partially transparent once the animation ends — `mask-position`
-   snaps back and part of the figure stays dimmed forever. This version fades
-   itself to nothing in its own last keyframe with `forwards`, so the resting
-   state is invisible by construction and needs no JS to clean up.
-
-   Two passes, then done: this is a transition, not a loading state. */
-@keyframes money-shimmer {
-  0% {
-    background-position: 150% 0;
-    opacity: 1;
-  }
-  99% {
-    opacity: 1;
-  }
-  100% {
-    background-position: -50% 0;
-    opacity: 0;
-  }
-}
-
-.shimmer-host {
-  position: relative;
-  display: inline-block;
-}
-
-.shimmer-band {
-  position: absolute;
-  inset: -2px -5px;
-  pointer-events: none;
-  border-radius: 5px;
-  opacity: 0;
-  background-image: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0) 35%,
-    rgba(255, 255, 255, 0.94) 50%,
-    rgba(255, 255, 255, 0) 65%
-  );
-  background-size: 240% 100%;
-  background-repeat: no-repeat;
-  animation: money-shimmer 0.62s linear 2 forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shimmer-band {
-    animation: none;
-  }
-}
-
 /* The card elevation in the design is a 1px hairline plus a barely-there
    drop shadow — not a blur. Kept as a utility so every card matches. */
 .card-shadow {
