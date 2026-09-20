@@ -105,12 +105,13 @@ export default function NetWorthCard() {
                 pills read as a detached row. */}
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3648C9" stopOpacity="0.47" />
-              <stop offset="55%" stopColor="#3648C9" stopOpacity="0.22" />
-              {/* Stops at 0.09 rather than 0. The wash has to still be
-                  visible where the pills sit, or they read as a detached row
-                  again — and the pills overlap the last 16px, so there's no
-                  hard edge where the gradient ends. */}
-              <stop offset="100%" stopColor="#3648C9" stopOpacity="0.09" />
+              <stop offset="50%" stopColor="#3648C9" stopOpacity="0.24" />
+              {/* Still tinted at 80%, which is where the pills sit, so they
+                  read as seated on the wash — then all the way out to zero by
+                  the bottom edge. Ending on any visible alpha leaves a hard
+                  line where the SVG stops. */}
+              <stop offset="80%" stopColor="#3648C9" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#3648C9" stopOpacity="0" />
             </linearGradient>
           </defs>
           {/* keyed on range so the path re-mounts and re-draws on switch */}
