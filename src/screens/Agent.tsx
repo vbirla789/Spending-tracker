@@ -107,7 +107,14 @@ export default function Agent({
           <EmptyState onPick={ask} draft={draft} setDraft={setDraft} onSubmit={() => ask(draft)} />
         ) : (
           <>
-            <div ref={thread} className="phone-scroll mt-[24px] min-h-0 flex-1 overflow-y-auto">
+            {/* overflow-x-hidden is not cosmetic: `overflow-y: auto` makes
+                the x axis auto too, so any child a pixel too wide turns the
+                whole thread into a horizontal scroller and the avatars clip
+                against the left edge. */}
+            <div
+              ref={thread}
+              className="phone-scroll mt-[24px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+            >
               <div className="flex flex-col gap-[24px] pb-[16px]">
                 {turns.map((turn, i) => (
                   <div key={turn.id} className="flex flex-col gap-[24px]">
@@ -376,7 +383,7 @@ function AgentReply({
             intro screen, so the two places you pick a question look alike. */}
         {showFollowUps && answer.followUps.length > 0 && (
           <motion.div
-            className="rail -mr-[16px] flex gap-[8px] overflow-x-auto pr-[16px]"
+            className="rail flex justify-start gap-[8px] overflow-x-auto"
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
@@ -386,7 +393,7 @@ function AgentReply({
                 key={q}
                 type="button"
                 onClick={() => onAsk(q)}
-                className="flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[50px] bg-[#ededed] px-[12px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
+                className="flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[50px] bg-[#ededed] px-[12px] text-left font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
               >
                 {q}
               </button>
