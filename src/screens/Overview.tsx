@@ -1,5 +1,6 @@
 import { useState } from "react";
 import CashFlowSection from "../components/CashFlowSection";
+import GridBackdrop from "../components/GridBackdrop";
 import HabitsCard from "../components/HabitsCard";
 import HomeBar from "../components/HomeBar";
 import NetWorthCard from "../components/NetWorthCard";
@@ -18,8 +19,10 @@ export default function Overview() {
   const [hidden, setHidden] = useState(false);
 
   return (
-    <div className="flex h-full w-full flex-col gap-[16px] overflow-hidden bg-canvas">
-      <header className="safe-top flex w-full shrink-0 flex-col items-center">
+    <div className="relative flex h-full w-full flex-col gap-[16px] overflow-hidden bg-canvas">
+      <GridBackdrop />
+
+      <header className="safe-top relative flex w-full shrink-0 flex-col items-center">
         <StatusBar />
         <div className="flex w-full items-center justify-between px-[20px] py-[12px]">
           <button
@@ -51,7 +54,7 @@ export default function Overview() {
         </div>
       </header>
 
-      <main className="phone-scroll safe-bottom flex min-h-0 flex-1 flex-col gap-[40px] overflow-y-auto px-[20px] pb-[24px]">
+      <main className="phone-scroll safe-bottom relative flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] pb-[24px]">
         <MaskProvider hidden={hidden}>
           <NetWorthCard />
           <CashFlowSection />

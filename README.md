@@ -18,7 +18,7 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 | Section | Content |
 | --- | --- |
 | **Net worth** | ₹ figure, derived delta, area chart, six range pills |
-| **Cash flow** | Six month tiles (income vs expenses), then income / expenses / net |
+| **Cash flow** | A card: six month tiles (income vs expenses), then income / expenses / net |
 | **Habits** | Category donut with month picker and a derived legend |
 | **Spent this month** | This month against last month, scrubbable |
 
@@ -67,6 +67,12 @@ One curve throughout — `cubic-bezier(0.23, 1, 0.32, 1)`, with NumberFlow handl
 | --- | --- |
 | **> 640px** | 375×812 phone mockup, centred. Scales down (never up) to fit short windows. |
 | **≤ 640px** | Bezel, faux status bar and faux home indicator all drop. Runs edge-to-edge with `env(safe-area-inset-*)` applied by the screen, not the frame. |
+
+## The backdrop
+
+A ruled-grid pattern sits behind the whole screen ([`1321:389939`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1321-389938)). One tile is 400×309 — the line sets are the exported assets, the 22 scattered squares are positioned divs since they're plain rects with per-block alpha — and six tiles stack down the page. Effective opacity is `0.56 × 0.07 ≈ 4%`: paper texture, not a second chart.
+
+It's anchored to the screen rather than the scroller, so it stays put while content moves over it. That matches the Figma, where it's painted on the frame.
 
 **One surface colour throughout.** `html` and `body` carry the screen's own `#f9faf7`, and a `theme-color` meta tints the browser's chrome to match. The desktop stage grey lives on a wrapper in `App`, not on `body` — when it sat on `body` it showed through the safe-area insets and behind Safari's collapsing toolbars, bracketing the app in a mismatched grey on a real phone. `overscroll-behavior: none` on the document stops the rubber-band gutter exposing it too.
 

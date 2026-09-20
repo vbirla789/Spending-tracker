@@ -10,11 +10,11 @@
   --font-serif: "IBM Plex Serif", Georgia, serif;
 
   /* Surfaces */
-  --color-canvas: #f9faf7; /* screen background */
+  --color-canvas: #ffffff; /* screen background */
   --color-card: #ffffff;
-  --color-hair: #f0f0f0; /* card + pill border, dividers */
+  --color-hair: #f0f0f0; /* card border, month tile border, dividers */
   --color-hair-icon: #ebebeb; /* the two circular header buttons */
-  --color-well: #fafaf8; /* inactive pill / month tile fill */
+  --color-hair-pill: #e0e0e0; /* range pill border — a step darker than -hair */
 
   /* Ink */
   --color-ink: #000000;

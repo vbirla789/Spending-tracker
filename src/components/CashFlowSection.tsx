@@ -26,21 +26,32 @@ export default function CashFlowSection() {
   const net = active.income - active.expenses;
 
   return (
-    <section className="flex w-full flex-col gap-[24px]" aria-labelledby="cf-label">
-      <p
-        id="cf-label"
-        className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim"
-      >
-        Cash flow
-      </p>
+    /* Now a card like the others, rather than bare section on the canvas —
+       with the backdrop grid behind everything, an unbounded section had
+       nothing separating it from the pattern. */
+    <section
+      /* shrink-0 is load-bearing: `overflow-hidden` resolves a flex item's
+         min-height to 0, so inside the scrolling column this card would
+         happily squash to its padding and swallow everything in it. */
+      className="w-full shrink-0 overflow-hidden rounded-[12px] border border-hair bg-card p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]"
+      aria-labelledby="cf-label"
+    >
+      <div className="mb-[16px] flex w-full flex-col gap-[12px]">
+        <p
+          id="cf-label"
+          className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim"
+        >
+          Cash flow
+        </p>
+        <div className="h-px w-full bg-hair" />
+      </div>
 
       <div className="flex flex-col gap-[32px]">
-        {/* Full-bleed scroll rail with the page gutter re-applied as padding.
-            At rest the first tile lines up with the "Cash flow" label, as in
-            the Figma; once you scroll, tiles pass clean under both screen
-            edges instead of stopping short of them. */}
+        {/* The rail bleeds to the card's edges and re-applies the 16px card
+            padding inside itself, so the first tile lines up with the "Cash
+            flow" label while the rest still run under the card edge. */}
         <div
-          className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[16px] overflow-x-auto px-[20px]"
+          className="rail -mx-[16px] flex w-[calc(100%+32px)] gap-[16px] overflow-x-auto px-[16px]"
           role="tablist"
           aria-label="Month"
         >
@@ -55,8 +66,10 @@ export default function CashFlowSection() {
                 onClick={() => setActiveKey(month.key)}
                 className={[
                   "flex h-[110px] shrink-0 flex-col items-center justify-end gap-[12px] overflow-hidden",
-                  "rounded-[8px] border px-[12px] pb-[8px] pt-[12px] transition-colors duration-150",
-                  selected ? "border-black bg-white" : "border-hair bg-well",
+                  "rounded-[8px] border bg-white px-[12px] pb-[8px] pt-[12px] transition-colors duration-150",
+                  // Both states are white now; the border and the label carry
+                  // the selection, same as the range pills.
+                  selected ? "border-black" : "border-hair",
                 ].join(" ")}
               >
                 {/* Unselected months sit back at 40% so the chosen one reads as
@@ -80,7 +93,12 @@ export default function CashFlowSection() {
                     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                   />
                 </div>
-                <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+                <p
+                  className={[
+                    "font-mono text-[12px] font-medium uppercase leading-[1.4]",
+                    selected ? "tracking-[0.6px] text-black" : "tracking-[1px] text-ink-dim",
+                  ].join(" ")}
+                >
                   {month.label}
                 </p>
               </button>

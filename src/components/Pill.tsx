@@ -2,9 +2,12 @@ import type { ReactNode } from "react";
 
 /**
  * The rounded control used for both the net-worth range switcher and the
- * habits month picker. Selected is white with a black hairline; unselected is
- * the `well` fill with a grey hairline and dim text — the Figma's "Price pill"
- * component in its two states.
+ * habits month picker — the Figma's "Price pill" component in its two states.
+ *
+ * Both states are now white; only the border and text weight separate them.
+ * Selected takes a black hairline and black text (plus the backdrop blur, so
+ * it stays legible where it overlaps the grid backdrop); unselected takes the
+ * lighter #e0e0e0 hairline and dim text.
  */
 export default function Pill({
   children,
@@ -34,8 +37,8 @@ export default function Pill({
         "relative after:absolute after:inset-x-0 after:top-1/2 after:h-[44px] after:-translate-y-1/2 after:content-['']",
         "transition-colors duration-150",
         selected
-          ? "border-black bg-white text-black"
-          : "border-hair bg-well text-ink-dim hover:text-black",
+          ? "border-black bg-white text-black backdrop-blur-[4px]"
+          : "border-hair-pill bg-white text-ink-dim hover:text-black",
       ].join(" ")}
     >
       {children}

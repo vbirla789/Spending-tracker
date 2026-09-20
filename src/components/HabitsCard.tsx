@@ -56,7 +56,7 @@ export default function HabitsCard() {
       <div className="flex w-full flex-col gap-[16px] p-[16px]">
         <div className="flex w-full flex-col gap-[12px]">
           <div className="flex w-full items-center justify-between">
-            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+            <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
               Habits
             </p>
 
@@ -67,7 +67,7 @@ export default function HabitsCard() {
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={`Month: ${month.label}. Change month`}
-                className="flex items-center justify-center gap-[4px] rounded-[40px] border border-hair py-[6px] pl-[12px] pr-[8px] font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[1px] text-black"
+                className="flex items-center justify-center gap-[4px] rounded-[40px] border border-hair py-[6px] pl-[12px] pr-[8px] font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[1px] text-black"
               >
                 {month.label}
                 <motion.img
@@ -100,8 +100,8 @@ export default function HabitsCard() {
                             setOpen(false);
                           }}
                           className={[
-                            "w-full px-[12px] py-[9px] text-left font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[1px]",
-                            m.key === monthKey ? "bg-well text-black" : "text-ink-dim",
+                            "w-full px-[12px] py-[9px] text-left font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[1px]",
+                            m.key === monthKey ? "bg-hair text-black" : "text-ink-dim",
                           ].join(" ")}
                         >
                           {m.label}
@@ -147,9 +147,9 @@ export default function HabitsCard() {
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4px]">
               <Money
                 value={total}
-                className="tnum font-serif text-[28px] font-semibold leading-[1.3] text-black"
+                className="tnum font-serif text-[28px] font-bold leading-[1.3] text-black"
               />
-              <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+              <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
                 Spent in {month.label}
               </p>
             </div>
@@ -165,16 +165,16 @@ export default function HabitsCard() {
                       className="size-[14px] shrink-0 rounded-[2px]"
                       style={{ background: `var(${cat.token})` }}
                     />
-                    <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+                    <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[0.6px] text-black">
                       {cat.label}
                     </p>
-                    <p className="tnum font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+                    <p className="tnum font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
                       {Math.round((cat.amount / total) * 100)}%
                     </p>
                   </div>
                   <Money
                     value={cat.amount}
-                    className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
+                    className="tnum font-serif text-[14px] font-bold leading-[1.3] text-black"
                   />
                 </div>
               </li>
