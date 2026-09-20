@@ -27,7 +27,13 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 
 A second screen ([`1328:391858`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1328-391858)) that presents itself over the Overview like a sheet.
 
-**Empty state** — the orb, a `SONAR AI` chip, "Your Finance Agent", the ask field, and two rails of suggested prompts. The rails start pre-scrolled to *different* offsets (118px and 75px, from the Figma) so they read as a drifting field of prompts rather than a two-column table.
+**The sphere is live.** A Three.js shader marble ported from [Overdue-EMI-assist-app](https://github.com/vbirla789/Overdue-EMI-assist-app) — the mesh turns at 16°/sec while the highlights stay put, because the form is shaded off the sphere's own normal rather than a texture. No containing ring: the shader's fresnel rim already reads as the edge of the glass, so a border on top looked like a second, harder edge.
+
+It's used **once**, for the hero. Each instance owns a WebGL context and browsers cap those around 16, so the 34px reply avatars keep a flat still — at that size the rotation isn't legible anyway.
+
+**Thinking state** — sending doesn't jump straight to an answer. The reply resolves after 1.9s, and while it's pending the agent shows named steps (*reading your transactions → comparing the months → putting it together*) over three pulsing dots. Named rather than a bare spinner because the whole claim is that the answer is derived from your data; the status says which part it's on. The question arriving from the home card is deliberately unanswered on mount too, so opening the agent shows it working rather than presenting a reply it never thought about. Only one question resolves at a time — queuing a second would let them land out of order.
+
+**Empty state** — the sphere, a `SONAR AI` chip, "Your Finance Agent", the ask field, and two rails of suggested prompts. The rails start pre-scrolled to *different* offsets (118px and 75px, from the Figma) so they read as a drifting field of prompts rather than a two-column table.
 
 **Conversation** — the opening question becomes the header title rather than being repeated as a bubble. Replies are unbubbled with the orb as an avatar; your own messages get a white card with a squared bottom-right corner. That asymmetry is the only speaker cue, so no colour or alignment work is needed.
 

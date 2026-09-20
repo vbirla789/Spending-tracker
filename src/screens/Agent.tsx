@@ -1,12 +1,17 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ChatInput from "../components/ChatInput";
 import HomeBar from "../components/HomeBar";
+import Sphere3D from "../components/Sphere3D";
 import StatusBar from "../components/StatusBar";
 import { answerFor, SUGGESTIONS, type Answer } from "../lib/agent";
 import { rupees, signedRupees } from "../lib/format";
 
-type Turn = { id: number; question: string; answer: Answer };
+/** `answer: null` means the agent is still working on this turn. */
+type Turn = { id: number; question: string; answer: Answer | null };
+
+/** How long the agent "thinks" before answering. */
+const THINKING_MS = 1900;
 
 /**
  * Sonar — the agent screen (Figma 1328:391858).
@@ -24,26 +29,54 @@ export default function Agent({
   initialQuestion?: string;
   onBack: () => void;
 }) {
+  /* Even the question arriving from home starts unanswered, so opening the
+     agent shows it working rather than presenting a finished reply that was
+     never thought about. */
   const [turns, setTurns] = useState<Turn[]>(() =>
-    initialQuestion ? [{ id: 0, question: initialQuestion, answer: answerFor(initialQuestion) }] : [],
+    initialQuestion ? [{ id: 0, question: initialQuestion, answer: null }] : [],
   );
   const [draft, setDraft] = useState("");
   const thread = useRef<HTMLDivElement>(null);
+  const timers = useRef<number[]>([]);
 
   const empty = turns.length === 0;
+  const thinking = turns.some((t) => t.answer === null);
+
+  function resolve(id: number, question: string) {
+    const t = window.setTimeout(() => {
+      setTurns((prev) =>
+        prev.map((turn) => (turn.id === id ? { ...turn, answer: answerFor(question) } : turn)),
+      );
+    }, THINKING_MS);
+    timers.current.push(t);
+  }
 
   function ask(question: string) {
     const q = question.trim();
-    if (!q) return;
-    setTurns((prev) => [...prev, { id: prev.length, question: q, answer: answerFor(q) }]);
+    // One question at a time — queuing a second while the first is pending
+    // would resolve them out of order.
+    if (!q || thinking) return;
+    setTurns((prev) => {
+      const id = prev.length;
+      resolve(id, q);
+      return [...prev, { id, question: q, answer: null }];
+    });
     setDraft("");
   }
 
-  // Keep the newest turn in view as the thread grows.
+  // Resolve the question we arrived with, and clear any pending timer on exit.
+  useEffect(() => {
+    if (initialQuestion) resolve(0, initialQuestion);
+    const pending = timers.current;
+    return () => pending.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep the newest turn in view as the thread grows or the reply lands.
   useEffect(() => {
     const el = thread.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [turns.length]);
+  }, [turns]);
 
   return (
     <div className="relative flex h-full w-full flex-col bg-canvas">
@@ -81,7 +114,7 @@ export default function Agent({
                     {/* The first question is already the header title, so it
                         isn't repeated as a bubble. */}
                     {i > 0 && <UserBubble text={turn.question} />}
-                    <AgentReply answer={turn.answer} />
+                    {turn.answer ? <AgentReply answer={turn.answer} /> : <Thinking />}
                   </div>
                 ))}
               </div>
@@ -123,13 +156,11 @@ function EmptyState({
     >
       <div className="flex flex-col items-center gap-[24px]">
         <div className="flex flex-col items-center gap-[16px]">
-          <div className="size-[128px] overflow-hidden rounded-full border border-[#e3e3e3] p-[4px]">
-            <img
-              src="/icons/orb.png"
-              alt=""
-              className="size-[118px] rounded-full object-cover"
-            />
-          </div>
+          {/* The live shader sphere, with no containing ring — the fresnel rim
+              in the shader already reads as the edge of the glass, so a border
+              on top of it just looked like a second, harder edge. */}
+          <Sphere3D size={128} />
+
           <span className="rounded-[20px] border border-[#e3e3e3] bg-[#f5f5f5] px-[12px] py-[6px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black">
             SONAR AI
           </span>
@@ -185,6 +216,74 @@ function ChipRail({
   );
 }
 
+/**
+ * The reply avatar. A flat still of the sphere rather than another Sphere3D:
+ * every live instance owns a WebGL context, browsers cap those around 16, and
+ * at 34px the rotation isn't legible anyway.
+ */
+function Avatar() {
+  return (
+    <img src="/icons/orb.png" alt="Sonar" className="size-[34px] shrink-0 rounded-full" />
+  );
+}
+
+/** Rotating status while the agent works — see Thinking. */
+const THOUGHTS = ["Reading your transactions", "Comparing the months", "Putting it together"];
+
+/**
+ * The pending state of a reply.
+ *
+ * Named steps rather than a bare spinner: the point of the wait is to show
+ * that the answer is being derived from your data, so the status says which
+ * part it's on. The dots carry the "still working" signal underneath.
+ */
+function Thinking() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(
+      () => setStep((s) => Math.min(s + 1, THOUGHTS.length - 1)),
+      620,
+    );
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <motion.div
+      className="flex gap-[12px]"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+    >
+      <Avatar />
+      <div className="flex min-w-0 flex-1 flex-col gap-[10px] pt-[4px]">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={step}
+            className="font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-ink-dim"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2 }}
+          >
+            {THOUGHTS[step]}
+          </motion.p>
+        </AnimatePresence>
+        <div className="flex gap-[5px]">
+          {[0, 1, 2].map((i) => (
+            <motion.span
+              key={i}
+              className="size-[6px] rounded-full bg-ink-dim"
+              animate={{ opacity: [0.25, 1, 0.25] }}
+              transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.16, ease: "easeInOut" }}
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function UserBubble({ text }: { text: string }) {
   return (
     <motion.div
@@ -210,9 +309,7 @@ function AgentReply({ answer }: { answer: Answer }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.34, delay: 0.08, ease: [0.23, 1, 0.32, 1] }}
     >
-      <div className="size-[34px] shrink-0 overflow-hidden rounded-full border border-[#e3e3e3] p-[3px]">
-        <img src="/icons/orb.png" alt="Sonar" className="size-[28px] rounded-full object-cover" />
-      </div>
+      <Avatar />
 
       <div className="flex min-w-0 flex-1 flex-col gap-[16px]">
         <div className="flex flex-col gap-[12px]">
