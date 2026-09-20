@@ -95,8 +95,14 @@ export default function NetWorthCard() {
           aria-label={`Net worth ${rupees(last)}, ${signedRupees(delta)} over ${range}`}
         >
           <defs>
+            {/* A three-stop falloff rather than a straight ramp. A linear fade
+                was near-invisible by half height, so the bottom third of the
+                chart box read as empty space and the pills below looked
+                detached from the graph. Holding ~20% at 55% height keeps the
+                wash present most of the way down, then it drops away. */}
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0F61FF" stopOpacity="0.5" />
+              <stop offset="0%" stopColor="#0F61FF" stopOpacity="0.55" />
+              <stop offset="55%" stopColor="#0F61FF" stopOpacity="0.2" />
               {/* fades out against the canvas — keep in step with
                   --color-canvas, which SVG can't read from a CSS variable */}
               <stop offset="100%" stopColor="#FAFAFC" stopOpacity="0" />
@@ -136,7 +142,7 @@ export default function NetWorthCard() {
           it, but the row runs clean off both screen edges once you scroll
           rather than stopping short of them. */}
       <div
-        className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pt-[8px]"
+        className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pt-[2px]"
         role="tablist"
         aria-label="Net worth range"
       >
