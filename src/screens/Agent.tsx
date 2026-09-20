@@ -4,7 +4,7 @@ import ChatInput from "../components/ChatInput";
 import HomeBar from "../components/HomeBar";
 import Sphere3D from "../components/Sphere3D";
 import StatusBar from "../components/StatusBar";
-import { answerFor, SUGGESTIONS, type Answer } from "../lib/agent";
+import { answerFor, SUGGESTIONS, type Answer, type AnswerRow } from "../lib/agent";
 import { rupees, signedRupees } from "../lib/format";
 
 /** `answer: null` means the agent is still working on this turn. */
@@ -114,7 +114,19 @@ export default function Agent({
                     {/* The first question is already the header title, so it
                         isn't repeated as a bubble. */}
                     {i > 0 && <UserBubble text={turn.question} />}
-                    {turn.answer ? <AgentReply answer={turn.answer} /> : <Thinking />}
+                    {turn.answer ? (
+                      <AgentReply
+                        answer={turn.answer}
+                        onAsk={ask}
+                        /* Only the newest reply offers follow-ups. Leaving
+                           them on every turn would stack stale invitations
+                           down the thread and make the scroll feel like a
+                           menu rather than a conversation. */
+                        showFollowUps={i === turns.length - 1 && !thinking}
+                      />
+                    ) : (
+                      <Thinking />
+                    )}
                   </div>
                 ))}
               </div>
@@ -301,7 +313,15 @@ function UserBubble({ text }: { text: string }) {
   );
 }
 
-function AgentReply({ answer }: { answer: Answer }) {
+function AgentReply({
+  answer,
+  onAsk,
+  showFollowUps,
+}: {
+  answer: Answer;
+  onAsk: (q: string) => void;
+  showFollowUps: boolean;
+}) {
   return (
     <motion.div
       className="flex gap-[12px]"
@@ -333,22 +353,7 @@ function AgentReply({ answer }: { answer: Answer }) {
             <div className="flex flex-col gap-[12px]">
               <div className="flex flex-col gap-[16px]">
                 {answer.card.rows.map((row) => (
-                  <div key={row.label} className="flex w-full items-center justify-between">
-                    <div className="flex items-center gap-[8px]">
-                      {row.token && (
-                        <span
-                          className="size-[12px] shrink-0 rounded-[2px]"
-                          style={{ background: `var(${row.token})` }}
-                        />
-                      )}
-                      <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
-                        {row.label}
-                      </p>
-                    </div>
-                    <p className="tnum font-serif text-[14px] font-medium leading-[1.3] text-black">
-                      {row.value < 0 ? `−${rupees(row.value)}` : rupees(row.value)}
-                    </p>
-                  </div>
+                  <Row key={row.label} row={row} onAsk={onAsk} />
                 ))}
               </div>
               <div className="h-px w-full bg-hair" />
@@ -365,7 +370,78 @@ function AgentReply({ answer }: { answer: Answer }) {
             </div>
           </div>
         )}
+
+        {/* A nowrap rail, not a wrapping row: a long suggestion wrapping to
+            two centred lines reads as a paragraph in a pill. Same chips as the
+            intro screen, so the two places you pick a question look alike. */}
+        {showFollowUps && answer.followUps.length > 0 && (
+          <motion.div
+            className="rail -mr-[16px] flex gap-[8px] overflow-x-auto pr-[16px]"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          >
+            {answer.followUps.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => onAsk(q)}
+                className="flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[50px] bg-[#ededed] px-[12px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
+              >
+                {q}
+              </button>
+            ))}
+          </motion.div>
+        )}
       </div>
     </motion.div>
+  );
+}
+
+/**
+ * A line in an answer's card. Tappable when the row carries a probe, which
+ * turns the reply into somewhere to go rather than somewhere to stop — the
+ * chevron is the only thing distinguishing it from a static row.
+ */
+function Row({ row, onAsk }: { row: AnswerRow; onAsk: (q: string) => void }) {
+  const body = (
+    <>
+      <div className="flex items-center gap-[8px]">
+        {row.token && (
+          <span
+            className="size-[12px] shrink-0 rounded-[2px]"
+            style={{ background: `var(${row.token})` }}
+          />
+        )}
+        <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+          {row.label}
+        </p>
+      </div>
+      <div className="flex items-center gap-[6px]">
+        <p className="tnum font-serif text-[14px] font-medium leading-[1.3] text-black">
+          {row.value < 0 ? `−${rupees(row.value)}` : rupees(row.value)}
+        </p>
+        {row.probe && (
+          <img src="/icons/chevron-right.svg" alt="" className="size-[12px] opacity-40" />
+        )}
+      </div>
+    </>
+  );
+
+  if (!row.probe) {
+    return <div className="flex w-full items-center justify-between">{body}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onAsk(row.probe!)}
+      aria-label={row.probe}
+      /* Negative margin so the 44px tap target doesn't change the card's
+         visual rhythm — the row still measures 18px like a static one. */
+      className="-mx-[8px] -my-[6px] flex w-[calc(100%+16px)] items-center justify-between rounded-[6px] px-[8px] py-[6px] transition-colors duration-150 active:bg-hair"
+    >
+      {body}
+    </button>
   );
 }

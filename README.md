@@ -37,6 +37,13 @@ It's used **once**, for the hero. Each instance owns a WebGL context and browser
 
 **Conversation** — the opening question becomes the header title rather than being repeated as a bubble. Replies are unbubbled with the orb as an avatar; your own messages get a white card with a squared bottom-right corner. That asymmetry is the only speaker cue, so no colour or alignment work is needed.
 
+**Answers are somewhere to go, not somewhere to stop.** Two ways onward:
+
+- **Tap a line in the card.** Rows that can be drilled carry a probe and render as buttons with a faint chevron — tapping one asks it as your next question. Tapping `FOOD & DINING` in the breakdown asks "why is food & dining so high?", which returns that category across three months, which in turn offers to halve it. Three levels deep without typing.
+- **Follow-up chips** under the reply, on the newest turn only. Leaving them on every turn would stack stale invitations down the thread and turn the scroll into a menu.
+
+Both routes go through the same `ask()`, so a tap and a typed question are indistinguishable downstream — and every chip is guaranteed answerable, because the suggestion and the branch that answers it live in the same file.
+
 **Every answer is composed from `data.ts`**, not a string table — see `lib/agent.ts`. Ask "where did my money go?" and the reply names whichever category is actually largest and renders the real split; change a month's figures and the agent's wording and card change with them. An assistant that quotes a total the screen behind it disagrees with is worse than no assistant.
 
 The ask field is one component across both states so it doesn't jump, and its trailing button swaps mic → send the moment there's something to send.
