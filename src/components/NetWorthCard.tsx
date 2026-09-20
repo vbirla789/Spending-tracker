@@ -151,7 +151,10 @@ export default function NetWorthCard() {
         /* Pulled up onto the chart's wash. The selected pill's backdrop-blur
            only means anything when there's something behind it, which is the
            arrangement the Figma's blur value implies. */
-        className="rail relative -mx-[20px] -mt-[16px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px]"
+        /* pb adds to the column's 24px gap, putting 36px between the pills and
+           the card below — the chart needs more air under it than two cards
+           need between them. */
+        className="rail relative -mx-[20px] -mt-[16px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pb-[12px]"
         role="tablist"
         aria-label="Net worth range"
       >

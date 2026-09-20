@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import AskSonarCard from "../components/AskSonarCard";
 import AskSonarFab from "../components/AskSonarFab";
 import CashFlowSection from "../components/CashFlowSection";
@@ -27,22 +27,6 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
      get stranded off-screen at the top. */
   const [fabVisible, setFabVisible] = useState(true);
   const lastScroll = useRef(0);
-
-  /* The pinned block's height drives the scroller's top spacer. Observed
-     rather than measured once, because hiding balances reflows the delta
-     line and the block changes height under us. */
-  const pinned = useRef<HTMLDivElement>(null);
-  const [pinnedHeight, setPinnedHeight] = useState(0);
-
-  useLayoutEffect(() => {
-    const el = pinned.current;
-    if (!el) return;
-    const sync = () => setPinnedHeight(el.getBoundingClientRect().height);
-    sync();
-    const ro = new ResizeObserver(sync);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   function onScroll(e: React.UIEvent<HTMLElement>) {
     const y = e.currentTarget.scrollTop;
@@ -88,43 +72,22 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
         </div>
       </header>
 
-      <MaskProvider hidden={hidden}>
-        <div className="relative min-h-0 flex-1">
-          {/* Pinned. Net worth doesn't scroll — the cards ride up over it, so
-              the figure you opened the app for stays put while you read the
-              detail. Measured rather than hard-coded, since the delta line
-              reflows when balances are hidden. */}
-          <div ref={pinned} className="absolute inset-x-0 top-0 z-0 px-[20px]">
-            <NetWorthCard />
-          </div>
-
-          <main
-            onScroll={onScroll}
-            className="phone-scroll absolute inset-0 z-10 overflow-y-auto overflow-x-hidden"
-          >
-            {/* Transparent spacer the height of the pinned block, so the sheet
-                below starts level with it and the chart shows through. */}
-            <div style={{ height: pinnedHeight }} aria-hidden />
-
-            {/* The sheet. Opaque, so it occludes the chart as it rises; it
-                carries its own backdrop so the grid texture doesn't stop at
-                its top edge. pt is the 36px gap under the range pills; pb
-                clears the floating pill. */}
-            <div className="relative min-h-full bg-canvas">
-              <GridBackdrop />
-              <div className="safe-bottom relative flex flex-col gap-[24px] px-[20px] pb-[84px] pt-[36px]">
-                <CashFlowSection />
-                {/* Slotted where the Figma has it — after the hard numbers,
-                    before the behavioural cards. This entry asks a specific
-                    question; the floating pill opens the agent to ask your
-                    own. */}
-                <AskSonarCard onAsk={onAsk} />
-                <HabitsCard />
-              </div>
-            </div>
-          </main>
-        </div>
-      </MaskProvider>
+      {/* pb clears the floating pill, so the last card can scroll past it
+          instead of ending underneath it */}
+      <main
+        onScroll={onScroll}
+        className="phone-scroll safe-bottom relative flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] pb-[84px]"
+      >
+        <MaskProvider hidden={hidden}>
+          <NetWorthCard />
+          <CashFlowSection />
+          {/* Slotted where the Figma has it — after the hard numbers, before
+              the behavioural cards. This entry asks a specific question; the
+              floating pill below opens the agent to ask your own. */}
+          <AskSonarCard onAsk={onAsk} />
+          <HabitsCard />
+        </MaskProvider>
+      </main>
 
       {/* Empty string opens Sonar at its intro screen rather than with a
           question already asked — see App. */}
