@@ -49,10 +49,13 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 
 ### Header — privacy toggle
 - The **eye** hides every figure: `₹61,200` becomes `₹ ●●●●●`, one dot per digit.
+- The **icon swaps to eye-slash** — the two variants of the Figma component at node [`1316:389909`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1316-389909) (`Active=yes` / `Active=no`). The glyph carries the state; dimming it only said "disabled".
+- A **skeleton-style shimmer** sweeps across each figure as it changes — two 620ms passes, then done. It's a transition, not a loading state.
 - The symbol and sign are kept (`−₹1,488` → `−₹ ●●●●`), and **percentages stay visible** — they give no absolute figure away, and a row of nothing but dots reads as broken.
-- Transition is a 200ms blur-and-fade crossfade, with the dots landing **left to right** at 35ms intervals, so hiding reads as the number being covered over rather than swapped out.
-- Digit count is preserved rather than padded to a fixed length — the width should still feel like *your* number.
+- Digit count is preserved rather than padded to a fixed length — the width should still feel like *your* number, and a figure that changed length on hide would jog the layout.
 - `aria-pressed` and the button label flip with the state; masked figures expose `aria-label="Hidden"`.
+
+The shimmer is an **overlay band that fades itself out in its own last keyframe** with `animation-fill-mode: forwards`. The first attempt masked the text directly, which looked right mid-sweep but left the figure permanently half-dimmed: when a CSS animation ends, `mask-position` snaps back to its static value and part of the element stays under the translucent stop. Ending at `opacity: 0` makes the resting state invisible by construction, with no JS cleanup to get wrong.
 
 ### Motion
 One curve throughout — `cubic-bezier(0.23, 1, 0.32, 1)`. Everything is disabled under `prefers-reduced-motion`, and the count-up snaps instead of easing.
@@ -88,10 +91,9 @@ Icons — profile, eye, chevron, notch, status cluster — are the **exported Fi
 
 The four charts are **rendered from data** rather than dropped in as the exported images. An exported PNG can't respond to a range pill, a month tap or a drag, and the whole point of the screen is that those controls work. Geometry and colours are taken from the exports (`#0F61FF` stroke, 50%→0 gradient wash, 18px donut stroke, 167px ring), so they match — they're just alive.
 
-Two things the first pass got wrong, both fixed:
+**The net-worth line stays jagged on purpose.** A smoothed version was tried and reverted — the day-to-day texture is the character of the Figma chart, and curving it made the line read as an illustration of a trend rather than a record of one. Dense point counts (30–84) and a straight polyline.
 
-- **The net-worth line was too noisy.** Jitter was scaled per point, so a ₹800 month carried a ±₹95 wobble and read as a heart monitor. It's now a share of the whole move (9%), mean-reverting at 70% so it undulates in waves instead of spiking between neighbours, tapered to zero at both ends, drawn at 16–40 points instead of 30–84, and smoothed to a curve rather than a polyline.
-- **The spend chart's end dot was clipped.** Two causes: `preserveAspectRatio="none"` squashed the circles into ovals, and the last point sat exactly on the viewBox edge so half the marker fell outside. The chart now scales uniformly and the plot area is inset by 7px on each side. Both series also share one x-domain, so day N of this month sits directly above day N of last month.
+**The spend chart's end dot used to be clipped.** Two causes: `preserveAspectRatio="none"` squashed the circles into ovals, and the last point sat exactly on the viewBox edge so half the marker fell outside. The chart now scales uniformly and the plot area is inset 7px each side. Both series also share one x-domain, so day N of this month sits directly above day N of last month.
 
 ## Structure
 
