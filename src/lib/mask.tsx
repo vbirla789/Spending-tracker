@@ -57,7 +57,7 @@ export default function Money({
   /* The wrapper is pinned to exactly one line-height (`1lh`) and both states
      live inside it.
 
-     Without this the screen jumps on every toggle: a 0.52em dot is an
+     Without this the screen jumps on every toggle: a 0.39em dot is an
      inline-level box that sits on the baseline, so a row of them grows the
      line box past the digits' ascender. The figure got a few pixels taller,
      and because these cards are stacked in a flex column that shift
@@ -73,7 +73,7 @@ export default function Money({
               <span
                 key={i}
                 aria-hidden="true"
-                className="inline-block size-[0.52em] rounded-full bg-current"
+                className="inline-block size-[0.39em] rounded-full bg-current"
               />
             ))}
           </span>
