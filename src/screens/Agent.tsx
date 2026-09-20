@@ -339,14 +339,9 @@ function AgentReply({
       <Avatar />
 
       <div className="flex min-w-0 flex-1 flex-col gap-[16px]">
-        <div className="flex flex-col gap-[12px]">
-          <p className="font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
-            {answer.greeting}
-          </p>
-          <p className="whitespace-pre-wrap font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
-            {answer.body}
-          </p>
-        </div>
+        <p className="whitespace-pre-wrap font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+          {answer.body}
+        </p>
 
         {answer.card && (
           <div className="w-full overflow-hidden rounded-[12px] border border-hair bg-white p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">

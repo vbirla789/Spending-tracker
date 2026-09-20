@@ -15,7 +15,6 @@ export type AnswerRow = {
 };
 
 export type Answer = {
-  greeting: string;
   body: string;
   card?: {
     title: string;
@@ -42,7 +41,6 @@ export const SUGGESTIONS = [
 /** Surfaced on the Overview card as the daily prompt. */
 export const QUESTION_OF_THE_DAY = "Am I cash flow positive?";
 
-const GREETING = "Hey Vishal";
 const latest = () => CASH_FLOW[CASH_FLOW.length - 1];
 const thisMonth = () => HABITS[0];
 
@@ -74,7 +72,6 @@ export function answerFor(question: string): Answer {
     const cat = findCategory(q) ?? thisMonth().categories[0];
     const saved = Math.round(cat.amount / 2);
     return {
-      greeting: GREETING,
       body: `Halving ${cat.label.toLowerCase()} frees ${rupees(saved)} a month — ${rupees(
         saved * 12,
       )} over a year.\n\nAgainst this month:`,
@@ -99,7 +96,6 @@ export function answerFor(question: string): Answer {
     }));
     const change = history[0].amount - history[1].amount;
     return {
-      greeting: GREETING,
       body: `${cat.label} is ${rupees(cat.amount)} this month, ${
         change >= 0 ? "up" : "down"
       } ${rupees(change)} on ${history[1].label}.\n\nThe last three months:`,
@@ -118,7 +114,6 @@ export function answerFor(question: string): Answer {
     const total = sum(habits.categories.map((c) => c.amount));
     const top = [...habits.categories].sort((a, b) => b.amount - a.amount)[0];
     return {
-      greeting: GREETING,
       body: `Most of it went to ${top.label.toLowerCase()} — ${Math.round(
         (top.amount / total) * 100,
       )}% of everything you spent in ${habits.label}.\n\nHere's the split — tap any line to go deeper:`,
@@ -139,7 +134,6 @@ export function answerFor(question: string): Answer {
   // 4. Net worth
   if (q.includes("net worth") || q.includes("savings rate")) {
     return {
-      greeting: GREETING,
       body: `What moves it is what you keep. ${month.label} kept ${rupees(net)} of ${rupees(
         month.income,
       )} — that's ${Math.round((net / month.income) * 100)}%.\n\nThe last full month:`,
@@ -166,7 +160,6 @@ export function answerFor(question: string): Answer {
     const prevNet = prev.income - prev.expenses;
     const swing = net - prevNet;
     return {
-      greeting: GREETING,
       body: `${month.label} came out ${rupees(swing)} ${
         swing >= 0 ? "better" : "worse"
       } than ${prev.label}. The income is steady — it's the spending that moved.\n\nSide by side:`,
@@ -184,7 +177,6 @@ export function answerFor(question: string): Answer {
 
   // 6. Default — the question of the day, and the fallback for free text
   return {
-    greeting: GREETING,
     body:
       net >= 0
         ? `As of right now you're cash positive and doing great in terms of cash flow.\n\nHere's the analysis:`
