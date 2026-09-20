@@ -42,7 +42,10 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
 
       <header className="safe-top relative flex w-full shrink-0 flex-col items-center">
         <StatusBar />
-        <div className="flex w-full items-center justify-between px-[20px] py-[12px]">
+        {/* Tighter under the buttons than over them: the 16px column gap below
+            already separates the header from the first card, so a symmetric
+            12px read as a dead band and cost the scroller 8px of runway. */}
+        <div className="flex w-full items-center justify-between px-[20px] pb-[4px] pt-[12px]">
           <button
             type="button"
             aria-label="Profile"

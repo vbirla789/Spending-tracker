@@ -85,10 +85,11 @@ export default function Agent({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-[20px]">
-        {/* 64px to match the Overview's header row (40px buttons on 12px
-            padding), so the content below starts at the same height on both
-            screens and the transition between them doesn't jump. */}
-        <header className="flex h-[64px] shrink-0 items-center gap-[12px]">
+        {/* Height of the back button and nothing more. The Overview pads its
+            row because its buttons are bordered circles that would otherwise
+            sit on the status bar; here the chevron is bare, so the padding was
+            only ever empty band between the title and the thread. */}
+        <header className="flex h-[40px] shrink-0 items-center gap-[12px]">
           <button
             type="button"
             onClick={onBack}
@@ -116,7 +117,7 @@ export default function Agent({
                 against the left edge. */}
             <div
               ref={thread}
-              className="phone-scroll mt-[24px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+              className="phone-scroll mt-[40px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
             >
               <div className="flex flex-col gap-[24px] pb-[16px]">
                 {turns.map((turn, i) => (
@@ -192,7 +193,7 @@ function EmptyState({
         </div>
         {/* The SONAR AI badge above already says what this is, so the headline
             spends its line on the promise instead of repeating the label. */}
-        <h1 className="w-[253px] text-center font-serif text-[32px] font-medium leading-[1.3] text-black">
+        <h1 className="w-[253px] text-center font-serif text-[28px] font-medium leading-[1.3] text-black">
           Every rupee, explained
         </h1>
         <ChatInput value={draft} onChange={setDraft} onSubmit={onSubmit} />
@@ -262,7 +263,7 @@ const THOUGHTS = ["Reading your transactions", "Comparing the months", "Putting 
  *
  * Named steps rather than a bare spinner: the point of the wait is to show
  * that the answer is being derived from your data, so the status says which
- * part it's on. The dots carry the "still working" signal underneath.
+ * part it's on. The turning orb beside it carries the "still working" signal.
  */
 function Thinking() {
   const [step, setStep] = useState(0);
@@ -277,13 +278,28 @@ function Thinking() {
 
   return (
     <motion.div
-      className="flex gap-[12px]"
+      /* Centred on the orb, not top-aligned like a reply: this is a single
+         short line, so hanging it off the top of a 34px sphere leaves the
+         weight visibly low. Replies keep their top alignment — they run to
+         several lines and have to start level with the avatar. */
+      className="flex items-center gap-[12px]"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
     >
-      <Avatar />
-      <div className="flex min-w-0 flex-1 flex-col gap-[10px] pt-[4px]">
+      {/* The one place the small orb is live rather than the flat PNG: while
+          it's working, the turning sphere *is* the activity indicator, which
+          is why the dots that used to sit under the status line are gone.
+          Two signals for one wait read as a stutter. Faster than the hero's
+          16°/sec — at 34px a slow turn is indistinguishable from a still.
+
+          Affordable because it's transient and there's at most one thinking
+          turn at a time, so it costs a single WebGL context and releases it
+          the moment the reply lands. */}
+      <div className="size-[34px] shrink-0 overflow-hidden rounded-full">
+        <Sphere3D size={34} degPerSec={90} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
         <AnimatePresence mode="wait">
           <motion.p
             key={step}
@@ -296,16 +312,6 @@ function Thinking() {
             {THOUGHTS[step]}
           </motion.p>
         </AnimatePresence>
-        <div className="flex gap-[5px]">
-          {[0, 1, 2].map((i) => (
-            <motion.span
-              key={i}
-              className="size-[6px] rounded-full bg-ink-dim"
-              animate={{ opacity: [0.25, 1, 0.25] }}
-              transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.16, ease: "easeInOut" }}
-            />
-          ))}
-        </div>
       </div>
     </motion.div>
   );
@@ -325,7 +331,7 @@ function UserBubble({ text }: { text: string }) {
           A wide, soft shadow rather than the 1px hairline the cards use: the
           bubble is white on near-white paper, so without real lift it reads
           as a gap in the dots instead of a thing sitting on top of them. */}
-      <p className="max-w-[287px] rounded-bl-[12px] rounded-tl-[12px] rounded-tr-[12px] bg-white p-[12px] font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black shadow-[0_3px_10px_-3px_rgba(47,48,55,0.07),0_1px_2px_-1px_rgba(34,42,53,0.05)]">
+      <p className="max-w-[287px] rounded-bl-[12px] rounded-tl-[12px] rounded-tr-[12px] bg-white p-[12px] font-mono text-[14px] font-medium leading-[1.4] tracking-[0.6px] text-black shadow-[0_3px_10px_-3px_rgba(47,48,55,0.07),0_1px_2px_-1px_rgba(34,42,53,0.05)]">
         {text}
       </p>
     </motion.div>
@@ -351,7 +357,7 @@ function AgentReply({
       <Avatar />
 
       <div className="flex min-w-0 flex-1 flex-col gap-[16px]">
-        <p className="whitespace-pre-wrap font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+        <p className="whitespace-pre-wrap font-mono text-[14px] font-medium leading-[1.4] tracking-[0.6px] text-black">
           {answer.body}
         </p>
 
