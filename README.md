@@ -53,7 +53,8 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 - The **eye** hides every figure: `₹61,200` becomes `₹ ●●●●●`, one dot per digit.
 - The **icon swaps to eye-slash** — the two variants of the Figma component at node [`1316:389909`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1316-389909) (`Active=yes` / `Active=no`). The glyph carries the state; dimming it only said "disabled".
 - The symbol and sign are kept (`−₹1,488` → `−₹ ●●●●`), and **percentages stay visible** — they give no absolute figure away, and a row of nothing but dots reads as broken.
-- Digit count is preserved rather than padded to a fixed length — the width should still feel like *your* number, and a figure that changed length on hide would jog the layout.
+- Digit count is preserved rather than padded to a fixed length — the width should still feel like *your* number.
+- **Nothing moves.** Every figure is pinned to exactly one line-height (`h-[1lh]`) with both states inside it. A dot is an inline-level box sitting on the baseline, so a row of them grew the line box past the digits' ascender — the headline gained 6.4px and, stacked in a flex column, that shift cascaded down the whole page on every toggle. Measured at 0px movement across all four sections in both directions.
 - `aria-pressed` and the button label flip with the state; masked figures expose `aria-label="Hidden"`.
 
 ### Motion

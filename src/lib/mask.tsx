@@ -50,38 +50,44 @@ export default function Money({
 }) {
   const hidden = useMasked();
 
-  if (!hidden) {
-    return (
-      <NumberFlow
-        value={Math.round(value)}
-        locales={LOCALE}
-        format={signed ? FORMAT_SIGNED : FORMAT}
-        className={className}
-        // Hints the compositor before the roll starts; without it the first
-        // digit change after an idle period drops frames.
-        willChange
-      />
-    );
-  }
-
   const rounded = Math.round(value);
   const sign = signed ? (rounded < 0 ? "−" : "+") : rounded < 0 ? "−" : "";
   const digitCount = Math.abs(rounded).toLocaleString(LOCALE).replace(/\D/g, "").length;
 
+  /* The wrapper is pinned to exactly one line-height (`1lh`) and both states
+     live inside it.
+
+     Without this the screen jumps on every toggle: a 0.52em dot is an
+     inline-level box that sits on the baseline, so a row of them grows the
+     line box past the digits' ascender. The figure got a few pixels taller,
+     and because these cards are stacked in a flex column that shift
+     cascaded down the whole page. An explicit height on a flex container
+     means its children can't grow it, so the box is identical either way. */
   return (
-    <span className={`inline-flex items-center gap-[0.22em] ${className ?? ""}`} aria-label="Hidden">
-      <span>
-        {sign}₹
-      </span>
-      <span className="inline-flex items-center gap-[0.2em]">
-        {Array.from({ length: digitCount }, (_, i) => (
-          <span
-            key={i}
-            aria-hidden="true"
-            className="inline-block size-[0.52em] rounded-full bg-current"
-          />
-        ))}
-      </span>
+    <span className={`inline-flex h-[1lh] items-center ${className ?? ""}`}>
+      {hidden ? (
+        <span className="inline-flex items-center gap-[0.22em]" aria-label="Hidden">
+          <span>{sign}₹</span>
+          <span className="inline-flex items-center gap-[0.2em]">
+            {Array.from({ length: digitCount }, (_, i) => (
+              <span
+                key={i}
+                aria-hidden="true"
+                className="inline-block size-[0.52em] rounded-full bg-current"
+              />
+            ))}
+          </span>
+        </span>
+      ) : (
+        <NumberFlow
+          value={rounded}
+          locales={LOCALE}
+          format={signed ? FORMAT_SIGNED : FORMAT}
+          // Hints the compositor before the roll starts; without it the first
+          // digit change after an idle period drops frames.
+          willChange
+        />
+      )}
     </span>
   );
 }
