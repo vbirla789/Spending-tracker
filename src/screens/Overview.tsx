@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AskSonarCard from "../components/AskSonarCard";
+import AskSonarFab from "../components/AskSonarFab";
 import CashFlowSection from "../components/CashFlowSection";
 import GridBackdrop from "../components/GridBackdrop";
 import HabitsCard from "../components/HabitsCard";
@@ -55,17 +56,24 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
         </div>
       </header>
 
-      <main className="phone-scroll safe-bottom relative flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] pb-[24px]">
+      {/* pb clears the floating pill, so the last card can scroll past it
+          instead of ending underneath it */}
+      <main className="phone-scroll safe-bottom relative flex min-h-0 flex-1 flex-col gap-[24px] overflow-y-auto px-[20px] pb-[84px]">
         <MaskProvider hidden={hidden}>
           <NetWorthCard />
           <CashFlowSection />
-          {/* The agent's only entry point, slotted where the Figma has it —
-              after the hard numbers, before the behavioural cards. */}
+          {/* Slotted where the Figma has it — after the hard numbers, before
+              the behavioural cards. This entry asks a specific question; the
+              floating pill below opens the agent to ask your own. */}
           <AskSonarCard onAsk={onAsk} />
           <HabitsCard />
           <SpentThisMonthCard />
         </MaskProvider>
       </main>
+
+      {/* Empty string opens Sonar at its intro screen rather than with a
+          question already asked — see App. */}
+      <AskSonarFab onOpen={() => onAsk("")} />
 
       <HomeBar />
     </div>

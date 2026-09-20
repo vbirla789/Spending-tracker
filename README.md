@@ -41,7 +41,14 @@ It's used **once**, for the hero. Each instance owns a WebGL context and browser
 
 The ask field is one component across both states so it doesn't jump, and its trailing button swaps mic → send the moment there's something to send.
 
-**Known gap:** nothing currently routes to the *empty* state — the home card always arrives with a question. It's one line (`setAgentQuestion("")`) once you decide where a second entry point lives.
+### Two ways in
+
+| Entry | Opens |
+| --- | --- |
+| **Question of the day** card | The agent, with that question already asked |
+| **Floating `Ask SONAR` pill** | The intro screen, to ask your own |
+
+The pill floats above the home indicator with a backdrop blur, since it sits over scrolling content — a flat white pill looks pasted on the moment a card slides under it. The scroller carries 84px of bottom padding so the last card clears it rather than ending underneath.
 
 ## Interaction spec
 
