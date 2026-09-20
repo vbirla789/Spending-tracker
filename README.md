@@ -13,14 +13,15 @@ npm run dev      # http://localhost:5270
 
 ## What's on the screen
 
-Four sections in the file's order and rhythm (16px header gap, 24px between sections, 20px page gutter):
+Three sections in the file's order and rhythm (16px header gap, 24px between sections, 20px page gutter):
 
 | Section | Content |
 | --- | --- |
 | **Net worth** | ₹ figure, derived delta, area chart, six range pills |
 | **Cash flow** | A card: six month tiles (income vs expenses), then income / expenses / net |
 | **Habits** | Category donut with month picker and a derived legend |
-| **Question of the day** | The agent's touchpoint — a real question plus `Ask SONAR` |
+
+The Figma has a fourth, a **Question of the day** card between cash flow and habits — a fixed question plus an `Ask SONAR` button. It was built and then cut: the floating pill already opens the agent, and the intro screen's suggested prompts show what Sonar can be asked without spending a card on home to say it.
 
 ## Sonar — the agent
 
@@ -47,12 +48,9 @@ Both routes go through the same `ask()`, so a tap and a typed question are indis
 
 The ask field is one component across both states so it doesn't jump, and its trailing button swaps mic → send the moment there's something to send.
 
-### Two ways in
+### The way in
 
-| Entry | Opens |
-| --- | --- |
-| **Question of the day** card | The agent, with that question already asked |
-| **Floating `Ask SONAR` pill** | The intro screen, to ask your own |
+The **floating `Ask SONAR` pill** opens the agent at its intro screen, to ask your own question. It used to be one of two doors — the Question of the day card opened the agent with that question already asked — but the card is gone, so the agent now always opens at the intro. The code path that opens it pre-asked is still there and still used: tapping a row inside an answer goes through it.
 
 The pill floats above the home indicator with a backdrop blur, since it sits over scrolling content — a flat white pill looks pasted on the moment a card slides under it. The scroller carries 84px of bottom padding so the last card clears it rather than ending underneath.
 
@@ -146,7 +144,7 @@ src/
   components/
     PhoneFrame · StatusBar · HomeBar · Pill · GridBackdrop
     NetWorthCard · CashFlowSection · HabitsCard
-    AskSonarCard · AskSonarFab · ChatInput · Sphere3D
+    AskSonarFab · ChatInput · Sphere3D
   screens/
     Overview.tsx           node 1313:389718
     Agent.tsx              node 1328:391858

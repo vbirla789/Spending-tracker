@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import AskSonarCard from "../components/AskSonarCard";
 import AskSonarFab from "../components/AskSonarFab";
 import CashFlowSection from "../components/CashFlowSection";
 import GridBackdrop from "../components/GridBackdrop";
@@ -84,10 +83,6 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
         <MaskProvider hidden={hidden}>
           <NetWorthCard />
           <CashFlowSection />
-          {/* Slotted where the Figma has it — after the hard numbers, before
-              the behavioural cards. This entry asks a specific question; the
-              floating pill below opens the agent to ask your own. */}
-          <AskSonarCard onAsk={onAsk} />
           <HabitsCard />
         </MaskProvider>
       </main>

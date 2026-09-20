@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 
 /**
- * The persistent way into Sonar, floating above the home indicator.
+ * The way into Sonar, floating above the home indicator.
  *
- * Distinct from the "Question of the day" card: that one asks a specific
- * question, this one just opens the agent at its intro screen (Figma
- * 1328:425040) so you can ask your own. Same brand treatment as the card's
- * CTA — the tint wash, the #4546ce hairline and the gradient label — so the
- * two read as the same door rather than two different features.
+ * The only one, now that the "Question of the day" card is gone — it opens the
+ * agent at its intro screen (Figma 1328:425040), where the suggested prompts
+ * do the work that card's fixed question used to: showing what Sonar can be
+ * asked rather than leaving you to imagine it.
  */
 export default function AskSonarFab({
   onOpen,
