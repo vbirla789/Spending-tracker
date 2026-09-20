@@ -40,8 +40,14 @@ export default function AskSonarCard({ onAsk }: { onAsk: (question: string) => v
           }}
         >
           <img src="/icons/ai-magic.svg" alt="" className="size-[16px]" />
+          {/* The Figma sets this in noon's `noontree` Bold, which isn't
+              available here — it renders uppercase in the file, and Geist Mono
+              is what every other control on this screen already uses, so the
+              substitution keeps the label in the system rather than inventing
+              a third typeface. Size, line-height and tracking are the design's
+              label3 token. */}
           <span
-            className="bg-clip-text text-[14px] font-semibold leading-[18px] tracking-[-0.14px] text-transparent"
+            className="bg-clip-text font-mono text-[14px] font-semibold uppercase leading-[18px] tracking-[-0.14px] text-transparent"
             style={{
               backgroundImage: "linear-gradient(90deg, #4146ce 0%, #bf3deb 54.5%)",
             }}

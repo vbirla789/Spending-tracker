@@ -24,8 +24,9 @@ export default function AskSonarFab({ onOpen }: { onOpen: () => void }) {
         }}
       >
         <img src="/icons/ai-magic.svg" alt="" className="size-[16px]" />
+        {/* same label treatment as the card's CTA — see the note there */}
         <span
-          className="bg-clip-text text-[14px] font-semibold leading-[18px] tracking-[-0.14px] text-transparent"
+          className="bg-clip-text font-mono text-[14px] font-semibold uppercase leading-[18px] tracking-[-0.14px] text-transparent"
           style={{ backgroundImage: "linear-gradient(90deg, #4146ce 0%, #bf3deb 54.5%)" }}
         >
           Ask SONAR
