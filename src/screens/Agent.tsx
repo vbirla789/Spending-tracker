@@ -175,10 +175,13 @@ function EmptyState({
     >
       <div className="flex flex-col items-center gap-[24px]">
         <div className="flex flex-col items-center gap-[16px]">
-          {/* The live shader sphere, with no containing ring — the fresnel rim
-              in the shader already reads as the edge of the glass, so a border
-              on top of it just looked like a second, harder edge. */}
-          <Sphere3D size={128} />
+          {/* The ring is back. Without it the sphere's pale lower half melts
+              into the dot paper and the shape loses its edge — the shader's
+              fresnel rim only reads against something darker. 128px box, 4px
+              of breathing room, 118px sphere, per the Figma. */}
+          <div className="flex size-[128px] items-center justify-center rounded-full border border-chip-edge p-[4px]">
+            <Sphere3D size={118} />
+          </div>
 
           <span className="rounded-[20px] border border-chip-edge bg-chip px-[12px] py-[6px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black">
             SONAR AI

@@ -28,7 +28,12 @@
   /* Ink */
   --color-ink: #000000;
   --color-ink-dim: #a3a3a3;
-  --color-gain: #01c86b; /* the +₹800 (5.5%) delta */
+  --color-gain: #179b65; /* the +₹800 delta — a deeper green than the old neon */
+
+  /* The net worth line and its wash. Indigo rather than the old #0f61ff, so
+     the chart sits in the same family as the sphere and the Ask SONAR
+     gradient instead of being the one bright blue on the screen. */
+  --color-networth: #3648c9;
 
   /* Cash flow bars. Dark green is money in, pale green is money out — the
      pair repeats per month so the eye compares heights, not hues. */
