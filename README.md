@@ -68,6 +68,8 @@ One curve throughout — `cubic-bezier(0.23, 1, 0.32, 1)`, with NumberFlow handl
 | **> 640px** | 375×812 phone mockup, centred. Scales down (never up) to fit short windows. |
 | **≤ 640px** | Bezel, faux status bar and faux home indicator all drop. Runs edge-to-edge with `env(safe-area-inset-*)` applied by the screen, not the frame. |
 
+**One surface colour throughout.** `html` and `body` carry the screen's own `#f9faf7`, and a `theme-color` meta tints the browser's chrome to match. The desktop stage grey lives on a wrapper in `App`, not on `body` — when it sat on `body` it showed through the safe-area insets and behind Safari's collapsing toolbars, bracketing the app in a mismatched grey on a real phone. `overscroll-behavior: none` on the document stops the rubber-band gutter exposing it too.
+
 Only the content column scrolls — the header stays put, so the profile and eye buttons are always reachable. The two horizontal rails (range pills, month tiles) scroll independently with `overscroll-behavior` contained, so a sideways fling doesn't chain out to the page.
 
 Every tap target clears 44px. The pills stay visually 33px tall and grow their hit area with a pseudo-element.

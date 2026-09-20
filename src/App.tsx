@@ -43,8 +43,10 @@ export default function App() {
     );
   }
 
+  /* The stage grey lives here rather than on `body`, so the document root can
+     stay the screen's own colour — see the note in index.css. */
   return (
-    <div className="flex h-svh w-full items-center justify-center overflow-hidden">
+    <div className="flex h-svh w-full items-center justify-center overflow-hidden bg-[#e9eae6]">
       <div style={{ transform: scale < 1 ? `scale(${scale})` : undefined }}>
         <PhoneFrame>
           <Overview />

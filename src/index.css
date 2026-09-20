@@ -59,11 +59,24 @@ body,
   min-height: 100svh;
 }
 
+/* The page root carries the screen's own colour, not the desktop stage grey.
+   On a phone this is what shows through the safe-area insets, behind the
+   collapsing browser chrome, and in the rubber-band overscroll gutter — with
+   a different colour here those strips read as a second, mismatched surface
+   framing the app. The grey stage now lives on the desktop wrapper in App,
+   where it belongs. Set on html as well as body so it propagates to the
+   viewport canvas. */
+html,
+body {
+  background: var(--color-canvas);
+}
+
 body {
   font-family: var(--font-sans);
-  /* quiet stage behind the phone on desktop */
-  background: #e9eae6;
   color: var(--color-ink);
+  /* Stop the whole document rubber-banding on iOS; the screen's own scroller
+     handles overscroll and already contains it. */
+  overscroll-behavior: none;
 }
 
 /* Money is set in tabular figures so a redraw doesn't make the digits dance
