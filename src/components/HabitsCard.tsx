@@ -147,7 +147,7 @@ export default function HabitsCard() {
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4px]">
               <Money
                 value={total}
-                className="tnum font-serif text-[28px] font-bold leading-[1.3] text-black"
+                className="tnum font-serif text-[28px] font-semibold leading-[1.3] text-black"
               />
               <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] text-ink-dim">
                 Spent in {month.label}
@@ -162,7 +162,7 @@ export default function HabitsCard() {
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-[8px]">
                     <div
-                      className="size-[14px] shrink-0 rounded-[2px]"
+                      className="size-[12px] shrink-0 rounded-[2px]"
                       style={{ background: `var(${cat.token})` }}
                     />
                     <p className="font-mono text-[12px] font-semibold uppercase leading-[1.4] tracking-[0.6px] text-black">
@@ -174,7 +174,7 @@ export default function HabitsCard() {
                   </div>
                   <Money
                     value={cat.amount}
-                    className="tnum font-serif text-[14px] font-bold leading-[1.3] text-black"
+                    className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
                   />
                 </div>
               </li>

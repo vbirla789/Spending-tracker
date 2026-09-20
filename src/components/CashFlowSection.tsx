@@ -134,7 +134,7 @@ function Row({ swatch, label, value }: { swatch: string; label: string; value: n
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-[8px]">
-        <div className={`size-[14px] shrink-0 rounded-[2px] ${swatch}`} />
+        <div className={`size-[12px] shrink-0 rounded-[2px] ${swatch}`} />
         <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
           {label}
         </p>
