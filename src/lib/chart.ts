@@ -42,6 +42,13 @@ export function polyPath(points: Pt[]): string {
   return points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
 }
 
+/** Close a line down to the baseline so it can take the gradient wash. */
+export function areaPath(points: Pt[], baseline: number): string {
+  const first = points[0];
+  const last = points[points.length - 1];
+  return `${polyPath(points)} L${last.x.toFixed(2)},${baseline} L${first.x.toFixed(2)},${baseline} Z`;
+}
+
 /**
  * Turn category shares into dash geometry for a donut with rounded caps and
  * even gaps.

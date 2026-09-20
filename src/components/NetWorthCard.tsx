@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { NET_WORTH, RANGES, type Range } from "../data";
-import { polyPath, project } from "../lib/chart";
+import { areaPath, polyPath, project } from "../lib/chart";
 import { percent, rupees, signedRupees } from "../lib/format";
 import Money from "../lib/mask";
 import Pill from "./Pill";
@@ -30,6 +30,7 @@ const MIN_W = 600;
 export default function NetWorthCard() {
   const [range, setRange] = useState<Range>("1M");
   const scroller = useRef<HTMLDivElement>(null);
+  const gradientId = useId();
 
   const series = NET_WORTH[range];
   const first = series[0];
@@ -39,8 +40,7 @@ export default function NetWorthCard() {
 
   const W = Math.max(MIN_W, series.length * PX_PER_POINT);
   /* A little headroom top and bottom so the line never touches the edges of
-     its box. The floor used to be 20px to leave room for the wash the pills
-     sat on; with no fill the line can have the height back. */
+     its box. */
   const points = project(series, W, H, { padTop: 14, padBottom: 8 });
 
   /* Open on the right edge — today is the part anyone wants first, and the
@@ -95,10 +95,28 @@ export default function NetWorthCard() {
           role="img"
           aria-label={`Net worth ${rupees(last)}, ${signedRupees(delta)} over ${range}`}
         >
-          {/* Line only, no fill. A wash under it competes with the eight
-              other coloured surfaces on this screen; the line alone is enough
-              to read a trend. Keyed on range so the path re-mounts and
-              re-draws on switch. */}
+          <defs>
+            {/* Roughly half the alpha of the original wash. At full strength
+                it competed with the coloured cards below; this reads as a
+                tint under the line rather than a block of colour, and still
+                fades to nothing at the bottom so there's no edge where the
+                SVG stops. */}
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3648C9" stopOpacity="0.22" />
+              <stop offset="50%" stopColor="#3648C9" stopOpacity="0.1" />
+              <stop offset="80%" stopColor="#3648C9" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#3648C9" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* keyed on range so the paths re-mount and re-draw on switch */}
+          <motion.path
+            key={`${range}-area`}
+            d={areaPath(points, H)}
+            fill={`url(#${gradientId})`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.32 }}
+          />
           <motion.path
             key={`${range}-line`}
             /* Straight segments, not a curve — the day-to-day jaggedness is
@@ -124,11 +142,10 @@ export default function NetWorthCard() {
           it, but the row runs clean off both screen edges once you scroll
           rather than stopping short of them. */}
       <div
-        /* The row used to be pulled up onto the wash so it read as connected
-           to the chart. With a bare line there's nothing to sit on and no
-           seam to hide, so it goes back to plain space above. pb adds to the
-           column's 24px gap, putting 36px between the pills and the card
-           below. */
+        /* Plain space above rather than overlapping the chart — the wash is
+           light enough now that the pills don't need to sit on it to read as
+           part of the same block. pb adds to the column's 24px gap, putting
+           36px between the pills and the card below. */
         className="rail relative -mx-[20px] flex w-[calc(100%+40px)] gap-[12px] overflow-x-auto px-[20px] pb-[12px] pt-[16px]"
         role="tablist"
         aria-label="Net worth range"

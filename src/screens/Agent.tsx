@@ -85,12 +85,15 @@ export default function Agent({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-[20px]">
-        <header className="flex h-[36px] shrink-0 items-center gap-[12px]">
+        {/* 64px to match the Overview's header row (40px buttons on 12px
+            padding), so the content below starts at the same height on both
+            screens and the transition between them doesn't jump. */}
+        <header className="flex h-[64px] shrink-0 items-center gap-[12px]">
           <button
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="flex size-[36px] shrink-0 items-center justify-center transition-transform duration-150 active:scale-90"
+            className="flex size-[40px] shrink-0 items-center justify-center transition-transform duration-150 active:scale-90"
           >
             <img src="/icons/chevron-right.svg" alt="" className="size-[20px] rotate-180" />
           </button>
@@ -322,7 +325,7 @@ function UserBubble({ text }: { text: string }) {
           A wide, soft shadow rather than the 1px hairline the cards use: the
           bubble is white on near-white paper, so without real lift it reads
           as a gap in the dots instead of a thing sitting on top of them. */}
-      <p className="max-w-[287px] rounded-bl-[12px] rounded-tl-[12px] rounded-tr-[12px] bg-white p-[12px] font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black shadow-[0_8px_24px_-4px_rgba(47,48,55,0.12),0_2px_6px_-1px_rgba(34,42,53,0.08)]">
+      <p className="max-w-[287px] rounded-bl-[12px] rounded-tl-[12px] rounded-tr-[12px] bg-white p-[12px] font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black shadow-[0_3px_10px_-3px_rgba(47,48,55,0.07),0_1px_2px_-1px_rgba(34,42,53,0.05)]">
         {text}
       </p>
     </motion.div>
