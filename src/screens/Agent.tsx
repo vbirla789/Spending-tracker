@@ -85,11 +85,11 @@ export default function Agent({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-[20px]">
-        {/* Height of the back button and nothing more. The Overview pads its
-            row because its buttons are bordered circles that would otherwise
-            sit on the status bar; here the chevron is bare, so the padding was
-            only ever empty band between the title and the thread. */}
-        <header className="flex h-[40px] shrink-0 items-center gap-[12px]">
+        {/* 8px around the 40px back button, so the row is 56px — no fixed
+            height, the button sets it. Flush against the status bar read as
+            cramped; the padding buys the title air without pushing the thread
+            down, since the 20px below it is unchanged. */}
+        <header className="flex shrink-0 items-center gap-[12px] py-[8px]">
           <button
             type="button"
             onClick={onBack}
