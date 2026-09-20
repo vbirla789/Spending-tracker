@@ -16,6 +16,12 @@
   --color-hair-icon: #ebebeb; /* the two circular header buttons */
   --color-hair-pill: #e0e0e0; /* range pill border — a step darker than -hair */
 
+  /* Suggestion chips and the SONAR AI badge. A flat #ededed read as a solid
+     block once the agent gained its dot paper, so the fill lightens and a
+     hairline carries the edge instead. */
+  --color-chip: #f5f5f5;
+  --color-chip-edge: #e3e3e3;
+
   /* Ink */
   --color-ink: #000000;
   --color-ink-dim: #a3a3a3;

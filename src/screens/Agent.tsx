@@ -180,7 +180,7 @@ function EmptyState({
               on top of it just looked like a second, harder edge. */}
           <Sphere3D size={128} />
 
-          <span className="rounded-[20px] border border-[#e3e3e3] bg-[#f5f5f5] px-[12px] py-[6px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+          <span className="rounded-[20px] border border-chip-edge bg-chip px-[12px] py-[6px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black">
             SONAR AI
           </span>
         </div>
@@ -226,7 +226,7 @@ function ChipRail({
           key={q}
           type="button"
           onClick={() => onPick(q)}
-          className="flex h-[36px] shrink-0 items-center justify-center whitespace-nowrap rounded-[50px] bg-[#ededed] px-[12px] py-[6px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
+          className="flex h-[36px] shrink-0 items-center justify-center whitespace-nowrap rounded-[50px] border border-chip-edge bg-chip px-[12px] py-[6px] font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
         >
           {q}
         </button>
@@ -388,7 +388,7 @@ function AgentReply({
                 key={q}
                 type="button"
                 onClick={() => onAsk(q)}
-                className="flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[50px] bg-[#ededed] px-[12px] text-left font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
+                className="flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[50px] border border-chip-edge bg-chip px-[12px] text-left font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
               >
                 {q}
               </button>
