@@ -103,7 +103,7 @@ A ruled-grid pattern sits behind the whole screen ([`1321:389939`](https://www.f
 
 It's anchored to the screen rather than the scroller, so it stays put while content moves over it. That matches the Figma, where it's painted on the frame.
 
-**One surface colour throughout.** `html` and `body` carry the screen's own `#f9faf7`, and a `theme-color` meta tints the browser's chrome to match. The desktop stage grey lives on a wrapper in `App`, not on `body` — when it sat on `body` it showed through the safe-area insets and behind Safari's collapsing toolbars, bracketing the app in a mismatched grey on a real phone. `overscroll-behavior: none` on the document stops the rubber-band gutter exposing it too.
+**One surface colour throughout.** `html` and `body` carry the screen's own canvas — `#fafafc`, a hair cooler and darker than the `#ffffff` cards so a card reads as a surface sitting on the page rather than a hairline drawn on it — and a `theme-color` meta tints the browser's chrome to match. The desktop stage grey lives on a wrapper in `App`, not on `body` — when it sat on `body` it showed through the safe-area insets and behind Safari's collapsing toolbars, bracketing the app in a mismatched grey on a real phone. `overscroll-behavior: none` on the document stops the rubber-band gutter exposing it too.
 
 Only the content column scrolls — the header stays put, so the profile and eye buttons are always reachable. The two horizontal rails (range pills, month tiles) scroll independently with `overscroll-behavior` contained, so a sideways fling doesn't chain out to the page.
 

@@ -97,8 +97,9 @@ export default function NetWorthCard() {
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#0F61FF" stopOpacity="0.5" />
-              {/* fades to the canvas, which is now white */}
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+              {/* fades out against the canvas — keep in step with
+                  --color-canvas, which SVG can't read from a CSS variable */}
+              <stop offset="100%" stopColor="#FAFAFC" stopOpacity="0" />
             </linearGradient>
           </defs>
           {/* keyed on range so the path re-mounts and re-draws on switch */}

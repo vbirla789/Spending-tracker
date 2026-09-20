@@ -10,7 +10,10 @@
   --font-serif: "IBM Plex Serif", Georgia, serif;
 
   /* Surfaces */
-  --color-canvas: #ffffff; /* screen background */
+  /* A hair cooler and darker than the cards, so a white card reads as a
+     surface sitting on the page rather than a hairline drawn on it. Sampled
+     from Figma 1333:436761. */
+  --color-canvas: #fafafc; /* screen background */
   --color-card: #ffffff;
   --color-hair: #f0f0f0; /* card border, month tile border, dividers */
   --color-hair-icon: #ebebeb; /* the two circular header buttons */
