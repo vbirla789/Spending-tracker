@@ -13,7 +13,7 @@ npm run dev      # http://localhost:5270
 
 ## What's on the screen
 
-Four sections in the file's order and rhythm (16px header gap, 40px between sections, 20px page gutter):
+Four sections in the file's order and rhythm (16px header gap, 24px between sections, 20px page gutter):
 
 | Section | Content |
 | --- | --- |
@@ -21,7 +21,6 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 | **Cash flow** | A card: six month tiles (income vs expenses), then income / expenses / net |
 | **Habits** | Category donut with month picker and a derived legend |
 | **Question of the day** | The agent's touchpoint — a real question plus `Ask SONAR` |
-| **Spent this month** | This month against last month, scrubbable |
 
 ## Sonar — the agent
 
@@ -79,11 +78,6 @@ The pill floats above the home indicator with a backdrop blur, since it sits ove
 - Dismisses on **outside tap** or **Escape**, not only by re-tapping the trigger — a popover that traps you feels broken on touch.
 - Choosing a month **re-tweens the arcs** (`strokeDashoffset`, 450ms) and counts the centre figure. Percentages and the total are derived from the amounts, so the ring, the centre and the legend can't drift apart.
 
-### Spent this month — scrubber
-- **Press and drag** anywhere across the chart. The headline figure, the dot and a vertical guide follow your finger.
-- **Release** to snap back to today.
-- Past today the current-month value **clamps** — this month has no data in the future, and letting it run would draw a lie.
-- Both series share **one y-scale**. Normalising separately would make a cheap month look identical to an expensive one.
 
 ### Header — privacy toggle
 - The **eye** hides every figure: `₹61,200` becomes `₹ ●●●●●`, one dot per digit.
@@ -133,11 +127,9 @@ The habits figures are internally consistent and used unchanged: 2,356 + 1,488 +
 
 Icons — profile, eye, chevron, notch, status cluster — are the **exported Figma assets**, committed to `public/icons/`.
 
-The four charts are **rendered from data** rather than dropped in as the exported images. An exported PNG can't respond to a range pill, a month tap or a drag, and the whole point of the screen is that those controls work. Geometry and colours are taken from the exports (`#0F61FF` stroke, 50%→0 gradient wash, 18px donut stroke, 167px ring), so they match — they're just alive.
+The charts are **rendered from data** rather than dropped in as the exported images. An exported PNG can't respond to a range pill, a month tap or a pan, and the whole point of the screen is that those controls work. Geometry and colours are taken from the exports (`#0F61FF` stroke, 50%→0 gradient wash, 18px donut stroke, 167px ring), so they match — they're just alive.
 
 **The net-worth line stays jagged on purpose.** A smoothed version was tried and reverted — the day-to-day texture is the character of the Figma chart, and curving it made the line read as an illustration of a trend rather than a record of one. Dense point counts (30–84) and a straight polyline.
-
-**The spend chart's end dot used to be clipped.** Two causes: `preserveAspectRatio="none"` squashed the circles into ovals, and the last point sat exactly on the viewBox edge so half the marker fell outside. The chart now scales uniformly and the plot area is inset 7px each side. Both series also share one x-domain, so day N of this month sits directly above day N of last month.
 
 ## Structure
 
@@ -145,11 +137,15 @@ The four charts are **rendered from data** rather than dropped in as the exporte
 src/
   data.ts                  all figures; nothing derivable is stored
   lib/
+    agent.ts               composes Sonar's answers from data.ts
     chart.ts               projection, path building, donut arc geometry
     format.ts              ₹ formatting for labels (en-IN grouping)
     mask.tsx               <Money>: NumberFlow when visible, dots when hidden
   components/
-    PhoneFrame · StatusBar · HomeBar · Pill
-    NetWorthCard · CashFlowSection · HabitsCard · SpentThisMonthCard
-  screens/Overview.tsx     node 1313:389718
+    PhoneFrame · StatusBar · HomeBar · Pill · GridBackdrop
+    NetWorthCard · CashFlowSection · HabitsCard
+    AskSonarCard · AskSonarFab · ChatInput · Sphere3D
+  screens/
+    Overview.tsx           node 1313:389718
+    Agent.tsx              node 1328:391858
 ```

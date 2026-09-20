@@ -6,7 +6,6 @@ import GridBackdrop from "../components/GridBackdrop";
 import HabitsCard from "../components/HabitsCard";
 import HomeBar from "../components/HomeBar";
 import NetWorthCard from "../components/NetWorthCard";
-import SpentThisMonthCard from "../components/SpentThisMonthCard";
 import StatusBar from "../components/StatusBar";
 import { MaskProvider } from "../lib/mask";
 
@@ -67,7 +66,6 @@ export default function Overview({ onAsk }: { onAsk: (question: string) => void 
               floating pill below opens the agent to ask your own. */}
           <AskSonarCard onAsk={onAsk} />
           <HabitsCard />
-          <SpentThisMonthCard />
         </MaskProvider>
       </main>
 

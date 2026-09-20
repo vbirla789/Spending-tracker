@@ -138,21 +138,3 @@ export const HABITS: HabitsMonth[] = [
   },
 ];
 
-/**
- * Spend-to-date, one point per day. The current month stops at "today" (the
- * solid line ends mid-chart with a dot); last month runs the full width as a
- * dashed ghost so the gap between them is the story.
- */
-export const SPEND_CURRENT = [
-  0, 210, 505, 505, 940, 1_180, 1_460, 1_460, 1_905, 2_240, 2_600, 2_600, 3_150, 3_470, 3_900,
-  4_260, 4_260, 4_880, 5_300, 5_760, 6_140, 6_140, 6_720, 7_180, 7_640, 8_090, 8_420, 8_780,
-];
-
-export const SPEND_PRIOR = [
-  0, 180, 430, 430, 810, 1_090, 1_330, 1_330, 1_700, 2_090, 2_450, 2_450, 3_020, 3_460, 3_980,
-  4_480, 4_480, 5_240, 5_900, 6_520, 7_080, 7_080, 7_880, 8_620, 9_340, 10_010, 10_620, 11_240,
-  11_820, 12_360, 12_820,
-];
-
-/** Which day of the month "today" is — where the solid line stops. */
-export const TODAY_INDEX = SPEND_CURRENT.length - 1;
