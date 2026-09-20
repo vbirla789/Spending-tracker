@@ -18,7 +18,7 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 | Section | Content |
 | --- | --- |
 | **Net worth** | ₹ figure, derived delta, area chart, six range pills |
-| **Cash flow** | Four month tiles (income vs expenses), then income / expenses / net |
+| **Cash flow** | Six month tiles (income vs expenses), then income / expenses / net |
 | **Habits** | Category donut with month picker and a derived legend |
 | **Spent this month** | This month against last month, scrubbable |
 
@@ -34,9 +34,10 @@ Four sections in the file's order and rhythm (16px header gap, 40px between sect
 
 ### Cash flow — month tiles
 - **Tap** a tile to select that month. Selected is white with a black hairline; the rest sit back at 40% opacity.
-- The row is a **full-bleed scroll rail**: it escapes the 20px page gutter on both sides and carries no horizontal padding, so tiles run clean off each edge rather than stopping short of them. Opens on the most recent month.
-- Bars **animate height** over 400ms. All bars share **one ceiling across all four months**, so a tall bar in May is genuinely taller than a short one in July — the tiles are comparable, not individually normalised.
-- The three rows below recalculate and count up. **Net flow is derived** and can go negative — July is −₹1,080 and the sign flips.
+- Six months, `Mar` through `Aug`. Opens on the **first** tile, selected, with the row resting at its left edge and aligned to the "Cash flow" label — you read the run forwards and scroll into the recent months.
+- The row is a **full-bleed rail with the gutter re-applied as padding**: aligned at rest, but tiles pass clean under both screen edges once you scroll, rather than stopping short of them.
+- Bars **animate height** over 400ms. All bars share **one ceiling across all six months**, so a tall bar in May is genuinely taller than a short one in July — the tiles are comparable, not individually normalised.
+- The three rows below recalculate and roll. **Net flow is derived** and can go negative — April is −₹270 and July −₹1,080, sign and all.
 
 ### Habits — month picker
 - **Tap** the `SEP ⌄` pill to open a listbox; the chevron rotates 90°→270°.

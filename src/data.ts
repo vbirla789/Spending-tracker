@@ -66,6 +66,10 @@ export type MonthFlow = {
  * months, so the columns stay comparable month to month.
  */
 export const CASH_FLOW: MonthFlow[] = [
+  { key: "mar", label: "Mar", income: 1_980, expenses: 1_320 },
+  // April runs negative on purpose — it's the case the net row has to handle,
+  // and a run of six all-positive months would never exercise it.
+  { key: "apr", label: "Apr", income: 2_140, expenses: 2_410 },
   { key: "may", label: "May", income: 2_356, expenses: 1_198 },
   { key: "jun", label: "Jun", income: 1_720, expenses: 1_720 },
   { key: "jul", label: "Jul", income: 720, expenses: 1_800 },

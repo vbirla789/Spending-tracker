@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { CASH_FLOW } from "../data";
 import Money from "../lib/mask";
 
@@ -15,21 +15,15 @@ const BAR_MAX_PX = 59;
  * per-tile normalised.
  */
 export default function CashFlowSection() {
-  const [activeKey, setActiveKey] = useState(CASH_FLOW[CASH_FLOW.length - 1].key);
+  /* Opens on the first month, with the row resting at its left edge — you
+     read the run of months forwards and scroll into the recent ones. */
+  const [activeKey, setActiveKey] = useState(CASH_FLOW[0].key);
   const active = CASH_FLOW.find((m) => m.key === activeKey) ?? CASH_FLOW[0];
-  const scroller = useRef<HTMLDivElement>(null);
 
   const ceiling = Math.max(...CASH_FLOW.flatMap((m) => [m.income, m.expenses]));
   const scale = (value: number) => Math.max(4, Math.round((value / ceiling) * BAR_MAX_PX));
 
   const net = active.income - active.expenses;
-
-  /* Open on the most recent month. Before paint, so it doesn't read as the
-     row scrolling itself on load. */
-  useLayoutEffect(() => {
-    const el = scroller.current;
-    if (el) el.scrollLeft = el.scrollWidth;
-  }, []);
 
   return (
     <section className="flex w-full flex-col gap-[24px]" aria-labelledby="cf-label">
@@ -41,13 +35,12 @@ export default function CashFlowSection() {
       </p>
 
       <div className="flex flex-col gap-[32px]">
-        {/* Full-bleed scroll rail. It escapes the 20px page gutter on both
-            sides and carries no horizontal padding of its own, so tiles run
-            clean off each edge instead of stopping short of them — the row
-            reads as continuing past the screen rather than being boxed. */}
+        {/* Full-bleed scroll rail with the page gutter re-applied as padding.
+            At rest the first tile lines up with the "Cash flow" label, as in
+            the Figma; once you scroll, tiles pass clean under both screen
+            edges instead of stopping short of them. */}
         <div
-          ref={scroller}
-          className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[16px] overflow-x-auto"
+          className="rail -mx-[20px] flex w-[calc(100%+40px)] gap-[16px] overflow-x-auto px-[20px]"
           role="tablist"
           aria-label="Month"
         >
