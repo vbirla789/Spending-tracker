@@ -34,6 +34,33 @@ export const SPEND_TRENDS: SpendMonth[] = [
   { key: "recent", label: "Recent", amount: 10_032 },
 ];
 
+/** Day of the month "today" falls on — the daily view and the agent's
+    month-against-month comparison both cut their series here. */
+export const TODAY_DAY = 22;
+
+/**
+ * September, day by day, up to today. Sums to exactly the ₹6,200 the habits
+ * card reports for Sep, so the daily view, the donut and the agent's
+ * month-to-date line are three renderings of one series rather than three
+ * series. Zero days are real zeros — the chart shows them as bare guides.
+ *
+ * Day 18 is the spike: the largest figure in the last seven days, which is
+ * what the daily view's headline and callout point at.
+ */
+export const DAILY_SPEND: number[] = [
+  180, 0, 240, 160, 0, 320, 140, 0, 260, 410, 0, 120, 340, 0, 480, 220, 0, 2_200, 160, 0, 380,
+  590,
+];
+
+/**
+ * August, day by day, complete. Sums to the ₹6,780 the habits card reports
+ * for Aug, for the same reason as above.
+ */
+export const AUG_DAILY: number[] = [
+  230, 0, 180, 320, 0, 140, 260, 340, 0, 620, 180, 0, 240, 710, 120, 0, 380, 290, 0, 160, 640, 0,
+  210, 330, 150, 0, 290, 560, 0, 240, 190,
+];
+
 export type MonthFlow = {
   key: string;
   label: string;
