@@ -417,14 +417,31 @@ function DailyBody() {
     (clientX: number) => {
       const el = plot.current;
       if (!el) return;
-      const x = clientX - el.getBoundingClientRect().left;
-      const i = Math.min(todayIdx, Math.max(0, Math.round(x / D_PITCH)));
+      /* As a fraction of the rendered width, not divided by D_PITCH: on
+         desktop the whole phone is scale()d down, so client px and layout px
+         disagree and a pitch division lands every drag short. */
+      const rect = el.getBoundingClientRect();
+      const frac = (clientX - rect.left) / rect.width;
+      const i = Math.min(todayIdx, Math.max(0, Math.round(frac * (D_COLS - 1))));
       setSelIdx(i);
     },
     [todayIdx],
   );
 
   const barH = (amount: number) => (amount / D_CEILING) * D_SCALE_H;
+
+  /* Pill collision. The date pill runs ~56px wide and TODAY ~49px; when the
+     scrub brings the two spans into contact, TODAY fades rather than letting
+     the cards shingle. Widths are the rendered sizes, not measured — both
+     labels are fixed-length uppercase mono, so they can't drift. */
+  const DATE_PILL_W = 56;
+  const TODAY_PILL_W = 49;
+  const todayX = todayIdx * D_PITCH;
+  const datePillLeft = Math.min(selX, D_PLOT_W - DATE_PILL_W);
+  const pillsCollide =
+    selIdx !== todayIdx &&
+    datePillLeft < todayX + TODAY_PILL_W &&
+    datePillLeft + DATE_PILL_W > todayX;
 
   /* Even thirds of the ceiling. The file's own middle labels (₹1.8/₹1.2 on
      an even pitch) aren't linear against its bars, and the numbers win —
@@ -537,13 +554,15 @@ function DailyBody() {
 
           {/* The two pills under the axis: the selected date (follows the
               scrub) and TODAY (fixed). When the scrub is on today they'd say
-              the same thing twice, so the date pill yields. */}
+              the same thing twice, so the date pill yields — and when it
+              merely gets close, TODAY fades out instead of colliding: the
+              selection is what you're pointing at, TODAY is only a landmark. */}
           <div className="relative mt-[3px] h-[36px]">
             {selIdx !== todayIdx && (
               <motion.div
                 className="absolute top-0 flex flex-col items-start drop-shadow-[0px_2px_0px_rgba(0,0,0,0.25)]"
                 initial={false}
-                animate={{ left: Math.min(selX, D_PLOT_W - 56) }}
+                animate={{ left: datePillLeft }}
                 transition={{ duration: 0.22, ease: EASE }}
               >
                 <img
@@ -558,9 +577,12 @@ function DailyBody() {
                 </div>
               </motion.div>
             )}
-            <div
+            <motion.div
               className="absolute top-0 flex flex-col items-start drop-shadow-[0px_2px_0px_rgba(0,0,0,0.25)]"
               style={{ left: todayIdx * D_PITCH }}
+              initial={false}
+              animate={{ opacity: pillsCollide ? 0 : 1 }}
+              transition={{ duration: 0.18 }}
             >
               <img
                 src="/icons/pointer-wide.svg"
@@ -572,7 +594,7 @@ function DailyBody() {
                   Today
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
 
