@@ -8,50 +8,31 @@
  * disagree").
  */
 
-export type Range = "1M" | "3M" | "6M" | "1Y" | "3Y" | "ALL";
-export const RANGES: Range[] = ["1M", "3M", "6M", "1Y", "3Y", "ALL"];
+export type SpendMonth = {
+  key: string;
+  label: string;
+  amount: number;
+};
 
 /**
- * Deterministic jitter. The Figma net-worth line is visibly noisy — a smooth
- * curve would read as fake — but `Math.random` would redraw differently on
- * every render and make the chart flicker under StrictMode's double-invoke.
- * A seeded LCG gives the same texture every time.
+ * Monthly spend, oldest first. The last entry is the month in progress — it
+ * gets the outlined bar and the callout rather than a month name.
+ *
+ * The figures are picked so that all three numbers the design puts in writing
+ * are true of the same series at once: the average lands on ₹12k, the month in
+ * progress on ₹10k, and the gap between them on the headline's 16.4%. Every
+ * one of those is read back out of this array rather than typed in beside it,
+ * so changing a month moves the headline, the AVG marker and the callout
+ * together.
  */
-function walk(seed: number, from: number, to: number, points: number): number[] {
-  let s = seed;
-  const rand = () => {
-    s = (s * 1664525 + 1013904223) % 4294967296;
-    return s / 4294967296;
-  };
-
-  // Amplitude scales with the span so a 3-year chart isn't as twitchy per-point
-  // as a 1-month one.
-  const amp = (to - from) / points / 1.4;
-  const out: number[] = [];
-  for (let i = 0; i < points; i++) {
-    const t = i / (points - 1);
-    const base = from + (to - from) * t;
-    // endpoints stay exact so the headline figure always matches the line's end
-    const wobble = i === 0 || i === points - 1 ? 0 : (rand() - 0.45) * amp * 9;
-    out.push(Math.round(base + wobble));
-  }
-  return out;
-}
-
-/** Every range lands on the same present-day value — only the history differs. */
-const NET_WORTH_NOW = 61_200;
-
-/* Dense point counts on purpose. The texture of a real balance moving day to
-   day is the point of this chart — a smooth curve reads as an illustration of
-   a trend rather than a record of one. */
-export const NET_WORTH: Record<Range, number[]> = {
-  "1M": walk(7, 60_400, NET_WORTH_NOW, 30),
-  "3M": walk(19, 57_800, NET_WORTH_NOW, 46),
-  "6M": walk(23, 52_400, NET_WORTH_NOW, 54),
-  "1Y": walk(41, 44_100, NET_WORTH_NOW, 60),
-  "3Y": walk(57, 18_300, NET_WORTH_NOW, 72),
-  ALL: walk(83, 6_200, NET_WORTH_NOW, 84),
-};
+export const SPEND_TRENDS: SpendMonth[] = [
+  { key: "mar", label: "Mar", amount: 9_086 },
+  { key: "apr", label: "Apr", amount: 14_561 },
+  { key: "may", label: "May", amount: 5_125 },
+  { key: "jun", label: "Jun", amount: 13_746 },
+  { key: "jul", label: "Jul", amount: 19_450 },
+  { key: "recent", label: "Recent", amount: 10_032 },
+];
 
 export type MonthFlow = {
   key: string;
@@ -64,16 +45,19 @@ export type MonthFlow = {
  * Cash flow, newest last. `income`/`expenses` are the source of truth; the two
  * bars in a month tile are sized as a share of the tallest bar across all
  * months, so the columns stay comparable month to month.
+ *
+ * Five months, Apr–Aug, matching the design. August carries the two figures
+ * the design spells out (₹4,356 in, ₹1,228 out); the rest are read off the
+ * heights its tiles are drawn at.
  */
 export const CASH_FLOW: MonthFlow[] = [
-  { key: "mar", label: "Mar", income: 1_980, expenses: 1_320 },
-  // April runs negative on purpose — it's the case the net row has to handle,
-  // and a run of six all-positive months would never exercise it.
-  { key: "apr", label: "Apr", income: 2_140, expenses: 2_410 },
-  { key: "may", label: "May", income: 2_356, expenses: 1_198 },
-  { key: "jun", label: "Jun", income: 1_720, expenses: 1_720 },
-  { key: "jul", label: "Jul", income: 720, expenses: 1_800 },
-  { key: "aug", label: "Aug", income: 2_356, expenses: 1_488 },
+  { key: "apr", label: "Apr", income: 4_356, expenses: 2_514 },
+  { key: "may", label: "May", income: 4_356, expenses: 2_514 },
+  { key: "jun", label: "Jun", income: 3_352, expenses: 3_352 },
+  // July runs negative on purpose — it's the case the net row has to handle,
+  // and a run of five all-positive months would never exercise it.
+  { key: "jul", label: "Jul", income: 1_508, expenses: 3_352 },
+  { key: "aug", label: "Aug", income: 4_356, expenses: 1_228 },
 ];
 
 export type Category = {

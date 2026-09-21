@@ -15,10 +15,12 @@ const BAR_MAX_PX = 52;
  * per-tile normalised.
  */
 export default function CashFlowSection() {
-  /* Opens on the first month, with the row resting at its left edge — you
-     read the run of months forwards and scroll into the recent ones. */
-  const [activeKey, setActiveKey] = useState(CASH_FLOW[0].key);
-  const active = CASH_FLOW.find((m) => m.key === activeKey) ?? CASH_FLOW[0];
+  /* Opens on the newest month with the row resting at its right edge, so the
+     three figures below describe where you are rather than where you were
+     five months ago. */
+  const newest = CASH_FLOW[CASH_FLOW.length - 1];
+  const [activeKey, setActiveKey] = useState(newest.key);
+  const active = CASH_FLOW.find((m) => m.key === activeKey) ?? newest;
 
   const ceiling = Math.max(...CASH_FLOW.flatMap((m) => [m.income, m.expenses]));
   const scale = (value: number) => Math.max(4, Math.round((value / ceiling) * BAR_MAX_PX));
@@ -33,25 +35,29 @@ export default function CashFlowSection() {
       /* shrink-0 is load-bearing: `overflow-hidden` resolves a flex item's
          min-height to 0, so inside the scrolling column this card would
          happily squash to its padding and swallow everything in it. */
-      className="w-full shrink-0 overflow-hidden rounded-[12px] border border-hair bg-card p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]"
+      className="w-full shrink-0 overflow-hidden border border-hair bg-card shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]"
       aria-labelledby="cf-label"
     >
-      <div className="mb-[16px] flex w-full flex-col gap-[12px]">
+      {/* The title owns its own padded band and the rule runs the full width
+          of the card beneath it — an inset rule would read as a divider
+          inside the content rather than as the edge of a header. */}
+      <div className="flex w-full flex-col px-[16px] py-[12px]">
         <p
           id="cf-label"
           className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim"
         >
           Cash flow
         </p>
-        <div className="h-px w-full bg-hair" />
       </div>
+      <div className="h-px w-full bg-hair" />
 
-      <div className="flex flex-col gap-[32px]">
+      <div className="flex flex-col gap-[32px] p-[16px]">
         {/* The rail bleeds to the card's edges and re-applies the 16px card
-            padding inside itself, so the first tile lines up with the "Cash
-            flow" label while the rest still run under the card edge. */}
+            padding inside itself, so the newest tile lines up with the figures
+            below while the older ones run out under the card edge.
+            justify-end parks it on that newest tile. */}
         <div
-          className="rail -mx-[16px] flex w-[calc(100%+32px)] gap-[16px] overflow-x-auto px-[16px]"
+          className="rail -mx-[16px] flex w-[calc(100%+32px)] justify-end gap-[16px] overflow-x-auto px-[16px]"
           role="tablist"
           aria-label="Month"
         >
@@ -69,28 +75,23 @@ export default function CashFlowSection() {
                   // to the bottom, so short months leave their headroom above
                   // rather than floating mid-tile.
                   "flex h-[104px] w-[78px] shrink-0 flex-col items-center justify-end gap-[8px] overflow-hidden",
-                  "rounded-[8px] border bg-white px-[12px] pb-[8px] pt-[12px] transition-colors duration-150",
-                  // Both states are white now; the border and the label carry
-                  // the selection, same as the range pills.
+                  "rounded-[1px] border bg-white px-[12px] pb-[8px] pt-[12px] transition-colors duration-150",
+                  // Both states are white; the border and the label carry the
+                  // selection. The bars stay at full strength either way —
+                  // dimming them would make the unselected months harder to
+                  // compare, which is the only reason they're on screen.
                   selected ? "border-black" : "border-hair",
                 ].join(" ")}
               >
-                {/* Unselected months sit back at 40% so the chosen one reads as
-                    the subject and the rest as context. */}
-                <div
-                  className={[
-                    "flex items-end gap-[12px] transition-opacity duration-150",
-                    selected ? "opacity-100" : "opacity-40",
-                  ].join(" ")}
-                >
+                <div className="flex items-end gap-[12px]">
                   <motion.div
-                    className="w-[20px] rounded-[4px] bg-income"
+                    className="w-[20px] bg-income"
                     initial={false}
                     animate={{ height: scale(month.income) }}
                     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                   />
                   <motion.div
-                    className="w-[20px] rounded-[4px] bg-expense"
+                    className="w-[20px] bg-expense"
                     initial={false}
                     animate={{ height: scale(month.expenses) }}
                     transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
@@ -111,16 +112,22 @@ export default function CashFlowSection() {
 
         <div className="flex flex-col gap-[12px]">
           <div className="flex flex-col gap-[16px]">
-            <Row swatch="bg-income" label="Income" value={active.income} />
+            <Row swatch="bg-income" label="Incoming" value={active.income} />
             {/* Negated so the figure itself carries the minus and NumberFlow
                 can roll it, rather than gluing a sign onto a positive. */}
-            <Row swatch="bg-expense" label="Expenses" value={-active.expenses} />
+            <Row swatch="bg-expense" label="Outgoing" value={-active.expenses} />
           </div>
           <div className="h-px w-full bg-hair" />
           <div className="flex w-full items-center justify-between">
-            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
-              Net cash flow
-            </p>
+            <div className="flex items-center gap-[8px]">
+              {/* The net row gets a swatch of its own now — without one it
+                  read as a footnote to the two rows above rather than as the
+                  third quantity they add up to. */}
+              <div className="size-[12px] shrink-0 rounded-[2px] bg-net" />
+              <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+                Net cash flow
+              </p>
+            </div>
             <Money
               value={net}
               signed

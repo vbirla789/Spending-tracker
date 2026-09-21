@@ -28,17 +28,20 @@
   /* Ink */
   --color-ink: #000000;
   --color-ink-dim: #a3a3a3;
-  --color-gain: #179b65; /* the +₹800 delta — a deeper green than the old neon */
+  --color-gain: #179b65; /* the below-average caret and the AVG marker */
 
-  /* The net worth line and its wash. Indigo rather than the old #0f61ff, so
-     the chart sits in the same family as the sphere and the Ask SONAR
-     gradient instead of being the one bright blue on the screen. */
-  --color-networth: #3648c9;
+  /* Spend trends. The bars are deliberately inert — only the month in progress
+     is drawn in outline, so it reads as the subject and the history as the
+     backdrop it's being measured against. */
+  --color-bar: #e6e6e6;
+  --color-rule: #dadada; /* baseline under the bars — a step darker than -hair */
+  --color-axis: #787878; /* its month labels — a step darker than -ink-dim */
 
   /* Cash flow bars. Dark green is money in, pale green is money out — the
      pair repeats per month so the eye compares heights, not hues. */
   --color-income: #035338;
   --color-expense: #abd37a;
+  --color-net: #7a5286; /* the net row's swatch — neither in nor out */
 
   /* Habits donut. Four fixed hues so a category keeps its colour across
      months; the legend swatch and the arc read from the same token. */
@@ -46,10 +49,6 @@
   --color-cat-travel: #00635d;
   --color-cat-grocery: #fd7548;
   --color-cat-other: #847dff;
-
-  /* Spend-vs-last-month line */
-  --color-series-current: #0f61ff;
-  --color-series-prior: #a3a3a3;
 
   /* Motion. The built-in easings are too soft for a chart redraw — the value
      should arrive decisively and settle, not drift. */

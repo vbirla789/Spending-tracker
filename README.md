@@ -1,6 +1,6 @@
 # Overview — personal finance home screen
 
-A 1:1 build of Figma node [`1313:389718`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1313-389718) from the *Seller detail page* file, wired up so every control actually does something.
+A 1:1 build of Figma node [`1489:154535`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1489-154535) from the *Seller detail page* file, wired up so every control actually does something.
 
 **Stack:** Vite + React 19 + TypeScript + Tailwind v4 + Framer Motion + [NumberFlow](https://number-flow.barvian.me/) — matching [Quest](https://github.com/vbirla789/Quest---track-savings-app).
 
@@ -13,15 +13,15 @@ npm run dev      # http://localhost:5270
 
 ## What's on the screen
 
-Three sections in the file's order and rhythm (16px header gap, 24px between sections, 20px page gutter):
+Three sections in the file's order and rhythm (32px under the header, 32px between sections, 16px page gutter — the header keeps a wider 20px gutter of its own):
 
 | Section | Content |
 | --- | --- |
-| **Net worth** | ₹ figure, derived delta, area chart, six range pills |
-| **Cash flow** | A card: six month tiles (income vs expenses), then income / expenses / net |
+| **Spend trends** | Derived headline %, six monthly bars, an AVG marker and a callout on the month in progress |
+| **Cash flow** | A card: five month tiles (incoming vs outgoing), then incoming / outgoing / net |
 | **Habits** | Category donut with month picker and a derived legend |
 
-The Figma has a fourth, a **Question of the day** card between cash flow and habits — a fixed question plus an `Ask SONAR` button. It was built and then cut: the floating pill already opens the agent, and the intro screen's suggested prompts show what Sonar can be asked without spending a card on home to say it.
+**Spend trends leads, not net worth.** The brief asks the home screen for *"financial well being, cash flow and even habits, with light insight on their spending, not just raw numbers"* — it never mentions net worth, and a balance figure is the rawest number there is. A bar you can see sitting under your own average says something a figure can't, and it sets up the agent, whose worked example is "where is my money going". An earlier version of this build led with a net worth area chart and six range pills; both are gone.
 
 ## Sonar — the agent
 
@@ -50,28 +50,31 @@ The ask field is one component across both states so it doesn't jump, and its tr
 
 ### The way in
 
-The **floating `Ask SONAR` pill** opens the agent at its intro screen, to ask your own question. It used to be one of two doors — the Question of the day card opened the agent with that question already asked — but the card is gone, so the agent now always opens at the intro. The code path that opens it pre-asked is still there and still used: tapping a row inside an answer goes through it.
+The **`Ask SONAR` pill in the header** opens the agent at its intro screen, to ask your own question. The code path that opens it with a question already asked is still there and still used: tapping a row inside an answer goes through it.
 
-The pill floats above the home indicator with a backdrop blur, since it sits over scrolling content — a flat white pill looks pasted on the moment a card slides under it. The scroller carries 84px of bottom padding so the last card clears it rather than ending underneath.
-
-**It hides on scroll down and returns on scroll up**, on the assumption that scrolling up means you're reaching for a control. It drops straight out of frame rather than fading in place, which would leave a ghost over the content. A 6px threshold ignores the jitter of a finger resting on the glass, and under 40px it always shows, so it can't get stranded off-screen at the top.
+It used to float above the home indicator and hide itself on scroll down — the assumption being that scrolling up meant you were reaching for a control. Moving it into the header deletes that whole mechanism: a header button can't get lost behind content, so there is no scroll-direction listener, no 6px jitter threshold, and no 84px of bottom padding needed to keep the last card clear of it.
 
 ## Interaction spec
 
-### Net worth — range pills and chart panning
-- **Tap** a pill to change the window. `1M · 3M · 6M · 1Y · 3Y · ALL`, single-select, `role="tablist"`.
-- The line **redraws** with a 550ms `pathLength` sweep; the wash cross-fades over 320ms.
-- Every ₹ figure **rolls** to its new value via NumberFlow — the digits shuffle rather than the string being swapped, so it reads as the same money being recalculated.
-- **The delta recalculates.** `1M` is +₹800 (1.3%); `6M` is +₹8,800 (16.8%); `3Y` is +₹42,900 (234.4%). A delta that never moves when the window does is decoration.
-- **The plot pans horizontally.** It's drawn at 20px per data point — 600px on `1M` up to 1,680px on `ALL` — inside a full-bleed scroll rail, so long windows keep their day-to-day detail instead of compressing into a squiggle. It opens scrolled to the right: today first, history behind it.
-- Six pills are wider than the gutter, so that row is a scroll rail too — `ALL` sits just off the right edge exactly as it does in the file. It never wraps, because wrapping would change the card's height per breakpoint.
+### Spend trends
+- **Everything is read out of one array.** `SPEND_TRENDS` in `data.ts` holds six monthly figures; the headline `16.4%`, the `AVG ₹12k` marker's *value and its height*, the `₹10k` callout and all six bar heights are derived from it. Change one month and they all move together.
+- **The plot pans horizontally.** The file draws it at 321px, which fits the column exactly — so the months are as small as they'll ever be and the indicator underneath has nothing to indicate. Horizontal geometry is scaled 1.5× into a full-bleed rail: same proportions, bars wide enough to read, four months in view and the rest to scroll back into. Vertical geometry is untouched, so the section still stands 167px tall.
+- It **opens on the present** and scrolls back into history, matching the cash flow rail — and the file, which draws the indicator's thumb parked at the right.
+- **The indicator is live**, not decoration: the thumb is positioned from `scrollLeft`, so it sits at 0 when you're fully scrolled back and at 22px (track minus thumb) at the present.
+- Month labels live **inside** the rail, centred on each bar, so they travel with the bars they name rather than drifting out of register.
+- The figures are chosen so the three numbers the design writes down are simultaneously true of one series: average ₹12,000, month in progress ₹10,032 (labelled `₹10k`), gap 16.4%.
+- **Only the month in progress is outlined**, white on a black hairline; the five closed months are flat `#e6e6e6`. The subject is the bar you can still change.
+- The **AVG marker sits at the average's own height**, not at a fixed offset, so it can't drift away from the bars it describes. Its rule stops short of the live bar — it's the history being averaged, not the month still running.
+- The **callout rides 8px above the live bar's top edge** rather than being parked at a hard-coded y.
+- The green caret is the *same* exported glyph flipped (`-scale-y-100`). Down-and-green is the good direction here: you're under your own average.
 
 ### Cash flow — month tiles
-- **Tap** a tile to select that month. Selected is white with a black hairline; the rest sit back at 40% opacity.
-- Six months, `Mar` through `Aug`. Opens on the **first** tile, selected, with the row resting at its left edge and aligned to the "Cash flow" label — you read the run forwards and scroll into the recent months.
+- **Tap** a tile to select that month. Selected is white with a black hairline; the rest carry a grey one.
+- Bars stay at **full strength in every tile**. An earlier build dimmed the unselected months to 40%, which made the only thing they're on screen for — comparison — harder.
+- Five months, `Apr` through `Aug`. Opens on the **newest** tile with the row parked at its right edge, so the three figures below describe where you are rather than where you were five months ago.
 - The row is a **full-bleed rail with the gutter re-applied as padding**: aligned at rest, but tiles pass clean under both screen edges once you scroll, rather than stopping short of them.
-- Bars **animate height** over 400ms. All bars share **one ceiling across all six months**, so a tall bar in May is genuinely taller than a short one in July — the tiles are comparable, not individually normalised.
-- The three rows below recalculate and roll. **Net flow is derived** and can go negative — April is −₹270 and July −₹1,080, sign and all.
+- Bars **animate height** over 400ms. All bars share **one ceiling across all five months**, so a tall bar in May is genuinely taller than a short one in July — the tiles are comparable, not individually normalised.
+- The three rows below recalculate and roll. **Net flow is derived** and can go negative — July is −₹1,844, sign and all.
 
 ### Habits — month picker
 - **Tap** the `SEP ⌄` pill to open a listbox; the chevron rotates 90°→270°.
@@ -79,13 +82,10 @@ The pill floats above the home indicator with a backdrop blur, since it sits ove
 - Choosing a month **re-tweens the arcs** (`strokeDashoffset`, 450ms) and counts the centre figure. Percentages and the total are derived from the amounts, so the ring, the centre and the legend can't drift apart.
 
 
-### Header — privacy toggle
-- The **eye** hides every figure: `₹61,200` becomes `₹ ●●●●●`, one dot per digit.
-- The **icon swaps to eye-slash** — the two variants of the Figma component at node [`1316:389909`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1316-389909) (`Active=yes` / `Active=no`). The glyph carries the state; dimming it only said "disabled".
-- The symbol and sign are kept (`−₹1,488` → `−₹ ●●●●`), and **percentages stay visible** — they give no absolute figure away, and a row of nothing but dots reads as broken.
-- Digit count is preserved rather than padded to a fixed length — the width should still feel like *your* number.
-- **Nothing moves.** Every figure is pinned to exactly one line-height (`h-[1lh]`) with both states inside it. A dot is an inline-level box sitting on the baseline, so a row of them grew the line box past the digits' ascender — the headline gained 6.4px and, stacked in a flex column, that shift cascaded down the whole page on every toggle. Measured at 0px movement across all four sections in both directions.
-- `aria-pressed` and the button label flip with the state; masked figures expose `aria-label="Hidden"`.
+### Header — privacy toggle (removed)
+The header used to carry an eye that masked every figure to `₹ ●●●●●`, one dot per digit, with the icon swapping to eye-slash. This version of the design replaces that button with the `Ask SONAR` pill, so the toggle has no trigger and is gone from the screen.
+
+The machinery is still in `lib/mask.tsx` and every figure still renders through `<Money>`, which defaults to visible — so restoring it is a button and a piece of state, not a rewrite. Worth knowing if it comes back: the masked state is pinned to one line-height (`h-[1lh]`) because a row of dots is taller than a row of digits, and without the pin the whole page shifted on every toggle.
 
 ### Motion
 One curve throughout — `cubic-bezier(0.23, 1, 0.32, 1)`, with NumberFlow handling its own digit easing. Everything is disabled under `prefers-reduced-motion`.
@@ -99,37 +99,40 @@ One curve throughout — `cubic-bezier(0.23, 1, 0.32, 1)`, with NumberFlow handl
 
 ## The backdrop
 
-A ruled-grid pattern sits behind the whole screen ([`1321:389939`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1321-389938)). One tile is 400×309 — the line sets are the exported assets, the 22 scattered squares are positioned divs since they're plain rects with per-block alpha — and six tiles stack down the page. Effective opacity is `0.56 × 0.07 ≈ 4%`: paper texture, not a second chart.
+**Dot paper**, the same `.dot-paper` the agent sheet uses: a 1.35px dot on an 11.35px grid at 11% black, straight off the file (which draws it as ~10,900 individual ellipses). Earlier versions of this screen used a ruled-grid pattern built from exported line tiles; this version replaces it, which has the side benefit that the home screen and the sheet that slides over it now share one backdrop.
 
 It's anchored to the screen rather than the scroller, so it stays put while content moves over it. That matches the Figma, where it's painted on the frame.
 
 **One surface colour throughout.** `html` and `body` carry the screen's own canvas — `#fafafc`, a hair cooler and darker than the `#ffffff` cards so a card reads as a surface sitting on the page rather than a hairline drawn on it — and a `theme-color` meta tints the browser's chrome to match. The desktop stage grey lives on a wrapper in `App`, not on `body` — when it sat on `body` it showed through the safe-area insets and behind Safari's collapsing toolbars, bracketing the app in a mismatched grey on a real phone. `overscroll-behavior: none` on the document stops the rubber-band gutter exposing it too.
 
-Only the content column scrolls — the header stays put, so the profile and eye buttons are always reachable. The two horizontal rails (range pills, month tiles) scroll independently with `overscroll-behavior` contained, so a sideways fling doesn't chain out to the page.
+Only the content column scrolls — the header stays put, so the profile button and `Ask SONAR` are always reachable. The month-tile rail scrolls independently with `overscroll-behavior` contained, so a sideways fling doesn't chain out to the page.
 
-Every tap target clears 44px. The pills stay visually 33px tall and grow their hit area with a pseudo-element.
+Every tap target clears 44px.
 
 ## Where the design and the maths disagree
 
-The Figma dummy data doesn't reconcile. Everything here is **derived from the amounts**, so three displayed values differ from the file:
+The Figma dummy data doesn't reconcile. Everything here is **derived from the amounts**, so a few displayed values differ from the file:
 
 | | Figma | Here | Why |
 | --- | --- | --- | --- |
-| Net worth delta | +₹800 **(5.5%)** | +₹800 **(1.3%)** | ₹800 on ₹60,400 is 1.3%. 5.5% would need a +₹3,190 move. |
-| Net cash flow | ₹1,234 | **+₹868** | ₹2,356 − ₹1,488 = ₹868. |
-| Aug expense bar | same height as May's | **taller** | Aug spends ₹1,488 against May's ₹1,198, so its bar must be taller. |
+| Net cash flow | ₹1,234 | **+₹3,128** | The file's own rows are ₹4,356 in and ₹1,228 out, which nets to ₹3,128. |
+| `AVG ₹12k` line height | ~₹16k above the baseline | **₹12k** | The marker is drawn well above the bars it averages. Placed at the average's real height instead. |
+| Month-in-progress bar | 91px | **86px** | 91px is ₹10.9k on the file's own scale, but the bar is labelled ₹10k. The other five match the file to the pixel. |
+| Aug outgoing bar | 28px (≈₹2,346) | **15px** | Drawn at more than twice the ₹1,228 its own legend row states. |
 
-The habits figures are internally consistent and used unchanged: 2,356 + 1,488 + 1,364 + 992 = **₹6,200**, and 38/24/22/16 = 100%.
+The habits figures are internally consistent and used unchanged: 2,356 + 1,488 + 1,364 + 992 = **₹6,200**, and 38/24/22/16 = 100%. The spend-trends series is chosen so that the average, the current month and the headline percentage are all true at once — see the note on `SPEND_TRENDS`.
+
+**One Figma inconsistency not reproduced:** the month tiles carry an 8px corner radius on the first tile and 1px on the other four. All five use 1px here, matching the four that agree and the rendered design.
+
+**Card corners are square.** Neither card node in the file carries a radius — the 12px they had was inherited from an earlier version of this build and is gone.
 
 **One deliberate colour change:** the home indicator. The Figma instance uses the Light (white) bar on the near-white canvas, which makes it invisible; the component's own documentation says to match it to the surface behind it, so this renders the Dark bar.
 
 ## Charts: assets vs code
 
-Icons — profile, eye, chevron, notch, status cluster — are the **exported Figma assets**, committed to `public/icons/`.
+Icons — profile, chevron, notch, status cluster, the AI spark, the green caret and the callout pointer — are the **exported Figma assets**, committed to `public/icons/`. The caret ships once: the file exports an up-caret and flips it, so the flip is what carries the direction.
 
-The charts are **rendered from data** rather than dropped in as the exported images. An exported PNG can't respond to a range pill, a month tap or a pan, and the whole point of the screen is that those controls work. Geometry and colours are taken from the exports (`#0F61FF` stroke, 50%→0 gradient wash, 18px donut stroke, 167px ring), so they match — they're just alive.
-
-**The net-worth line stays jagged on purpose.** A smoothed version was tried and reverted — the day-to-day texture is the character of the Figma chart, and curving it made the line read as an illustration of a trend rather than a record of one. Dense point counts (30–84) and a straight polyline.
+The charts are **rendered from data** rather than dropped in as the exported images. An exported PNG can't respond to a month tap, and it can't move its own average marker when the numbers change. Geometry and colours are taken from the exports (`#e6e6e6` bars, `2 2` dash on the guides, `#dadada` baseline, 18px donut stroke, 167px ring), so they match — they're just alive.
 
 ## Structure
 
@@ -138,14 +141,14 @@ src/
   data.ts                  all figures; nothing derivable is stored
   lib/
     agent.ts               composes Sonar's answers from data.ts
-    chart.ts               projection, path building, donut arc geometry
+    chart.ts               donut arc geometry
     format.ts              ₹ formatting for labels (en-IN grouping)
-    mask.tsx               <Money>: NumberFlow when visible, dots when hidden
+    mask.tsx               <Money>: NumberFlow, with the masked state unused
   components/
-    PhoneFrame · StatusBar · HomeBar · Pill · GridBackdrop
-    NetWorthCard · CashFlowSection · HabitsCard
-    AskSonarFab · ChatInput · Sphere3D
+    PhoneFrame · StatusBar · HomeBar
+    SpendTrendsCard · CashFlowSection · HabitsCard
+    AskSonarButton · ChatInput · Sphere3D
   screens/
-    Overview.tsx           node 1313:389718
+    Overview.tsx           node 1489:154535
     Agent.tsx              node 1328:391858
 ```

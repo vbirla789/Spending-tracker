@@ -52,10 +52,12 @@ export default function HabitsCard() {
   }, [open]);
 
   return (
-    <section className="card-shadow w-full rounded-[12px] border border-hair bg-card">
-      <div className="flex w-full flex-col gap-[16px] p-[16px]">
-        <div className="flex w-full flex-col gap-[12px]">
-          <div className="flex w-full items-center justify-between">
+    <section className="card-shadow w-full border border-hair bg-card">
+      {/* Header band and full-width rule, matching the cash flow card — the
+          rule is the edge of the header, so it runs the card's full width
+          rather than being inset with the content. */}
+      <div className="flex w-full flex-col px-[16px] py-[12px]">
+        <div className="flex w-full items-center justify-between">
             <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
               Habits
             </p>
@@ -113,10 +115,11 @@ export default function HabitsCard() {
                 )}
               </AnimatePresence>
             </div>
-          </div>
-          <div className="h-px w-full bg-hair" />
         </div>
+      </div>
+      <div className="h-px w-full bg-hair" />
 
+      <div className="p-[16px]">
         <div className="flex w-full flex-col items-center justify-center gap-[32px]">
           <div className="relative size-[167px] shrink-0">
             <svg
