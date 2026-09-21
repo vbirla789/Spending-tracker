@@ -1,4 +1,5 @@
-import { CASH_FLOW, HABITS, type Category } from "../data";
+import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS, TODAY_DAY, type Category } from "../data";
+import type { AgentWidget } from "../components/AgentWidgets";
 import { rupees, sum } from "./format";
 
 export type AnswerRow = {
@@ -26,6 +27,12 @@ export type Answer = {
      */
     total: { label: string; value: number; signed?: boolean };
   };
+  /**
+   * An interactive body rendered with (or instead of) the card — a slider,
+   * a line chart, a proportion bar. See AgentWidgets. `flowbar` is the one
+   * that renders *inside* the card, above its rows.
+   */
+  widget?: AgentWidget;
   /** Offered as chips under the reply. Every one must be answerable below. */
   followUps: string[];
 };
@@ -74,15 +81,8 @@ export function answerFor(question: string): Answer {
     return {
       body: `Halving ${cat.label.toLowerCase()} frees ${rupees(saved)} a month — ${rupees(
         saved * 12,
-      )} over a year.\n\nAgainst this month:`,
-      card: {
-        title: "If you halved it",
-        rows: [
-          { label: `${cat.label} now`, value: cat.amount, token: cat.token },
-          { label: "After the cut", value: cat.amount - saved, token: cat.token },
-        ],
-        total: { label: "Freed each month", value: saved, signed: true },
-      },
+      )} over a year.\n\nBut half is just a starting point — drag it:`,
+      widget: { kind: "whatif", catKey: cat.key },
       followUps: ["Where did my money go?", QUESTION_OF_THE_DAY],
     };
   }
@@ -154,23 +154,16 @@ export function answerFor(question: string): Answer {
     };
   }
 
-  // 5. Month against month
+  // 5. Month against month — Sep's running total against Aug's, as lines
   if (q.includes("changed") || q.includes("different") || q.includes("compare")) {
-    const prev = CASH_FLOW[CASH_FLOW.length - 2];
-    const prevNet = prev.income - prev.expenses;
-    const swing = net - prevNet;
+    const sepSoFar = sum(DAILY_SPEND);
+    const augByNow = sum(AUG_DAILY.slice(0, TODAY_DAY));
+    const diff = sepSoFar - augByNow;
     return {
-      body: `${month.label} came out ${rupees(swing)} ${
-        swing >= 0 ? "better" : "worse"
-      } than ${prev.label}. The income is steady — it's the spending that moved.\n\nSide by side:`,
-      card: {
-        title: `${prev.label} vs ${month.label}`,
-        rows: [
-          { label: `${prev.label} net`, value: prevNet, token: "--color-expense" },
-          { label: `${month.label} net`, value: net, token: "--color-income" },
-        ],
-        total: { label: "Difference", value: swing, signed: true },
-      },
+      body: `You've spent ${rupees(sepSoFar)} so far this month — ${rupees(diff)} ${
+        diff >= 0 ? "more" : "less"
+      } than by this point in Aug.\n\nDay by day. Tap a month in the legend to read one alone:`,
+      widget: { kind: "monthline" },
       followUps: ["Where did my money go?", "What's driving my net worth?"],
     };
   }
@@ -181,6 +174,7 @@ export function answerFor(question: string): Answer {
       net >= 0
         ? `As of right now you're cash positive and doing great in terms of cash flow.\n\nHere's the analysis:`
         : `Right now you're running negative — ${month.label} spent more than it earned.\n\nHere's the analysis:`,
+    widget: { kind: "flowbar" },
     card: {
       title: `${month.label} analysis`,
       rows: [

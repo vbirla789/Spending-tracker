@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { FlowBar, MonthLineCard, WhatIfCard } from "../components/AgentWidgets";
 import ChatInput from "../components/ChatInput";
 import HomeBar from "../components/HomeBar";
 import Sphere3D from "../components/Sphere3D";
@@ -369,6 +370,11 @@ function AgentReply({
           {answer.body}
         </p>
 
+        {/* Interactive bodies. whatif and monthline stand in for a card;
+            flowbar renders inside one, below. */}
+        {answer.widget?.kind === "whatif" && <WhatIfCard catKey={answer.widget.catKey} />}
+        {answer.widget?.kind === "monthline" && <MonthLineCard />}
+
         {answer.card && (
           <div className="w-full overflow-hidden rounded-[12px] border border-hair bg-white p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
             <div className="mb-[16px] flex flex-col gap-[12px]">
@@ -377,6 +383,9 @@ function AgentReply({
               </p>
               <div className="h-px w-full bg-hair" />
             </div>
+
+            {/* The strip translation of the rows below it: in, out, kept. */}
+            {answer.widget?.kind === "flowbar" && <FlowBar />}
 
             <div className="flex flex-col gap-[12px]">
               <div className="flex flex-col gap-[16px]">

@@ -46,6 +46,12 @@ Both routes go through the same `ask()`, so a tap and a typed question are indis
 
 **Every answer is composed from `data.ts`**, not a string table — see `lib/agent.ts`. Ask "where did my money go?" and the reply names whichever category is actually largest and renders the real split; change a month's figures and the agent's wording and card change with them. An assistant that quotes a total the screen behind it disagrees with is worse than no assistant.
 
+**Three answers are interactive, not just composed** (`components/AgentWidgets.tsx`, after Figma [`1500:199455`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1500-199455)):
+
+- **"Cut food & dining in half?"** answers with the cut on a slider. Half is just where it opens — drag it and the after-figure, the freed-per-month and per-year numbers roll (NumberFlow), while a bar of the category visibly gets eaten. The agent's arithmetic is live, not quoted.
+- **"What changed since August?"** answers with the two months as running-total lines — Sep solid blue ending in a dot at today, Aug dashed grey running the full month — drawn in with a path sweep. The legend chips are toggles: drop a month out to read the other alone. The body's "₹1,390 more than by this point in Aug" is computed from the same two day-series the chart draws.
+- **"Am I cash flow positive?"** opens its analysis card with a proportion strip — money in, money out, and what's left as three widths — so the answer is readable as geometry before it's readable as figures.
+
 The ask field is one component across both states so it doesn't jump, and its trailing button swaps mic → send the moment there's something to send.
 
 ### The way in
@@ -57,6 +63,9 @@ It used to float above the home indicator and hide itself on scroll down — the
 ## Interaction spec
 
 ### Spend trends
+- **The eyebrow is the switcher** (Figma [`1500:199389`](https://www.figma.com/design/v2kNjPYdqzigJ6fJ6nrMS3/Seller-detail-page?node-id=1500-199389)): `MONTHLY TRENDS ‹ ›` flips to `DAILY TRENDS ‹ ›` and back — dotted underline, paired bold chevrons, no extra control row. The headline, caption and chart body slide directionally (40px travel, 340ms) on a height-animated stage, so the cards below glide rather than jump.
+- **Daily view is a scrubber.** Twenty day columns with today always the 11th — exactly where the file parks its TODAY pill (x=162 ≈ 10 × 16.21px). Drag across the plot (or arrow-key it) and the black marker, the `SPENT ON` callout and the date pill follow to that day; future days are bare guides. It opens parked on the spike the headline names: the biggest day of the last seven, derived from `DAILY_SPEND`.
+- `DAILY_SPEND` sums to exactly the ₹6,200 the habits card reports for Sep, so the daily bars, the donut and the agent's month line are three renderings of one series.
 - **Everything is read out of one array.** `SPEND_TRENDS` in `data.ts` holds six monthly figures; the headline `16.4%`, the `AVG ₹12k` marker's *value and its height*, the `₹10k` callout and all six bar heights are derived from it. Change one month and they all move together.
 - **The plot pans horizontally.** The file draws it at 321px, which fits the column exactly — so the months are as small as they'll ever be and the indicator underneath has nothing to indicate. Horizontal geometry is scaled 1.5× into a full-bleed rail: same proportions, bars wide enough to read, four months in view and the rest to scroll back into. Vertical geometry is untouched, so the section still stands 167px tall.
 - It **opens on the present** and scrolls back into history, matching the cash flow rail — and the file, which draws the indicator's thumb parked at the right.
@@ -119,6 +128,8 @@ The Figma dummy data doesn't reconcile. Everything here is **derived from the am
 | `AVG ₹12k` line height | ~₹16k above the baseline | **₹12k** | The marker is drawn well above the bars it averages. Placed at the average's real height instead. |
 | Month-in-progress bar | 91px | **86px** | 91px is ₹10.9k on the file's own scale, but the bar is labelled ₹10k. The other five match the file to the pixel. |
 | Aug outgoing bar | 28px (≈₹2,346) | **15px** | Drawn at more than twice the ₹1,228 its own legend row states. |
+| Daily y-axis labels | ₹2.4 / ₹1.8 / ₹1.2 / ₹0 on an even 52px pitch | **₹2.4 / ₹1.6 / ₹0.8 / ₹0** | The file's middle values aren't linear against its own pixels — even pitch needs even thirds. |
+| Daily callout parking | On the window's first column | **On 18 Sep, the day the headline names** | The callout follows the scrub; its rest position is the claim being made. |
 
 The habits figures are internally consistent and used unchanged: 2,356 + 1,488 + 1,364 + 992 = **₹6,200**, and 38/24/22/16 = 100%. The spend-trends series is chosen so that the average, the current month and the headline percentage are all true at once — see the note on `SPEND_TRENDS`.
 
@@ -147,6 +158,7 @@ src/
   components/
     PhoneFrame · StatusBar · HomeBar
     SpendTrendsCard · CashFlowSection · HabitsCard
+    AgentWidgets (what-if slider · month line · flow bar)
     AskSonarButton · ChatInput · Sphere3D
   screens/
     Overview.tsx           node 1489:154535
