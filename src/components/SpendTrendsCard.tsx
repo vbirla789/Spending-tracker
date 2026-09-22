@@ -7,7 +7,10 @@ import useDragScroll from "../lib/useDragScroll";
 /* ------------------------------------------------------------------ */
 /* Monthly geometry — Figma 1489:165547 / 1505:199456.                 */
 
-const M_PLOT_H = 167;
+/** 20% over the file's 167. At 167 the bars sat low in the section and read as
+    a separate object from the headline above them; the extra height closes
+    that gap, and the space comes out of M_TOP_GAP so the stage total holds. */
+const M_PLOT_H = 200;
 /** 24px bars on a 60px pitch — a 36px gap between neighbours, with each
     divider guide sitting dead centre in it, 18px off either bar. */
 const M_BAR_W = 24;
@@ -41,19 +44,23 @@ const D_SCALE_H = 156;
 const D_CEILING = 2_400;
 
 /**
- * Both bodies stand exactly this tall, and both hang their plot off the same
- * 96px top gap.
+ * Both bodies stand exactly this tall.
  *
- * The daily view is naturally ~50px taller than the monthly one — it carries
- * a callout above the plot and two pills below it. Letting the stage animate
+ * The daily view is naturally taller than the monthly one — it carries a
+ * callout above the plot and two pills below it. Letting the stage animate
  * between the two heights walked the cash flow and habits cards down the
- * screen on every switch. Pinning both to the taller figure costs the monthly
- * view some air above its chart and buys two things: nothing below the
- * section ever moves, and the two plots occupy the same band, so switching
- * reads as the bars changing rather than the page relaying out.
+ * screen on every switch, so both are pinned to the taller figure and
+ * nothing below the section ever moves.
+ *
+ * Each view then spends that budget differently: the daily one keeps the
+ * file's 96px gap because its callout lives in it, while the monthly one
+ * trades gap for plot — a 64px gap over a 200px plot. Same total either way.
+ *   monthly: 64 + 200 + 26 (axis) + 24 (gap) + 5 (indicator) = 319
+ *   daily:   96 + 170 + 8 + 6 + 3 + 36 (pills)               = 319
  */
 const STAGE_H = 319;
-const TOP_GAP = 96;
+const M_TOP_GAP = 64;
+const D_TOP_GAP = 96;
 
 /** ₹10,032 → "₹10k". The design labels in thousands; the data is in rupees. */
 const thousands = (value: number) => `₹${Math.round(value / 1000)}k`;
@@ -278,7 +285,7 @@ function MonthlyBody({ average }: { average: number }) {
       >
         {/* The extra right padding keeps the callout's overhang inside the
             scrollable content instead of clipped at its edge. */}
-        <div className="flex flex-col" style={{ width: plotW + M_PAD_RIGHT, paddingTop: TOP_GAP }}>
+        <div className="flex flex-col" style={{ width: plotW + M_PAD_RIGHT, paddingTop: M_TOP_GAP }}>
           <div className="relative" style={{ width: plotW, height: M_PLOT_H }}>
             {/* One SVG for the guides so the 2-2 dash pattern is exact — a
                 CSS dashed border rounds the pattern to fit the edge. */}
@@ -503,7 +510,7 @@ function DailyBody() {
   const ticks = [D_CEILING, D_CEILING * (2 / 3), D_CEILING / 3, 0];
 
   return (
-    <div className="relative flex w-full flex-col" style={{ paddingTop: TOP_GAP }}>
+    <div className="relative flex w-full flex-col" style={{ paddingTop: D_TOP_GAP }}>
       {/* Callout — SPENT ON / date / figure — pointing down at the selected
           column from above the plot, the file's flat 2px drop shadow and all.
           Left edge rides the column (the file parks it flush), clamped so it
