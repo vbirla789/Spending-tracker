@@ -423,9 +423,20 @@ function AgentReply({
               </div>
               <CardRule />
               <div className="flex w-full items-center justify-between">
-                <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
-                  {answer.card.total.label}
-                </p>
+                <div className="flex items-center gap-[8px]">
+                  {/* The net row carries a swatch like the two above it —
+                      without one it read as a footnote rather than the
+                      third quantity they add up to. */}
+                  {answer.card.total.token && (
+                    <div
+                      className="size-[12px] shrink-0 rounded-[2px]"
+                      style={{ background: `var(${answer.card.total.token})` }}
+                    />
+                  )}
+                  <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+                    {answer.card.total.label}
+                  </p>
+                </div>
                 <p className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black">
                   {answer.card.total.signed
                     ? signedRupees(answer.card.total.value)

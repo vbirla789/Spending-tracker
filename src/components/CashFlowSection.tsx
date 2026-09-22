@@ -99,12 +99,7 @@ export default function CashFlowSection() {
                   // selection. The bars stay at full strength either way —
                   // dimming them would make the unselected months harder to
                   // compare, which is the only reason they're on screen.
-                  //
-                  // The selected tile drops its bottom edge so it opens onto
-                  // the figures below rather than closing itself off from
-                  // them — those three rows are this month, and a complete
-                  // box said the opposite.
-                  selected ? "border-black border-b-transparent" : "border-hair",
+                  selected ? "border-black" : "border-hair",
                 ].join(" ")}
               >
                 <div className="flex items-end gap-[12px]">

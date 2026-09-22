@@ -82,18 +82,24 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
   const [pct, setPct] = useState(50);
 
   const cut = Math.round((cat.amount * pct) / 100);
-  const after = cat.amount - cut;
 
   return (
-    <AnswerCard
-      title={`If you cut ${cat.label}`}
-      trailing={
-        <p className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black">
-          {pct}%
-        </p>
-      }
-    >
+    <AnswerCard title={`If you cut ${cat.label}`}>
       <div className="flex flex-col gap-[16px]">
+        {/* What you're cutting from on the left, how deep on the right, sat
+            directly over the bar they describe. The two rows that used to
+            spell out "now" and "after the cut" said in four numbers what the
+            bar already shows as two lengths. */}
+        <div className="flex w-full items-baseline justify-between">
+          <Money
+            value={cat.amount}
+            className="tnum font-serif text-[20px] font-semibold leading-[1.3] text-black"
+          />
+          <p className="tnum font-serif text-[20px] font-semibold leading-[1.3] text-black">
+            {pct}%
+          </p>
+        </div>
+
         {/* The bar IS the slider. The faded run growing from the left is the
             cut, the solid remainder is what survives, and the handle stands
             on the boundary — dragging visibly eats the category. A separate
@@ -136,8 +142,6 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
         </div>
 
         <div className="flex flex-col gap-[12px]">
-          <Row label={`${cat.label} now`} value={cat.amount} token={cat.token} />
-          <Row label="After the cut" value={after} token={cat.token} />
           <CardRule />
           <div className="flex w-full items-center justify-between">
             <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
@@ -165,24 +169,6 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
   );
 }
 
-function Row({ label, value, token }: { label: string; value: number; token?: string }) {
-  return (
-    <div className="flex w-full items-center justify-between">
-      <div className="flex items-center gap-[8px]">
-        {token && (
-          <div className="size-[12px] shrink-0 rounded-[2px]" style={{ background: `var(${token})` }} />
-        )}
-        <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
-          {label}
-        </p>
-      </div>
-      <Money
-        value={value}
-        className="tnum font-serif text-[14px] font-medium leading-[1.3] text-black"
-      />
-    </div>
-  );
-}
 
 /* ================================================================== */
 /* Month line — Sep against Aug, day by day                            */

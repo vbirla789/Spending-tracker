@@ -25,7 +25,7 @@ export type Answer = {
      * delta, where the leading +/− is the point; a plain total like "total
      * spent" must not carry one.
      */
-    total: { label: string; value: number; signed?: boolean };
+    total: { label: string; value: number; signed?: boolean; token?: string };
   };
   /**
    * An interactive body rendered with (or instead of) the card — a slider,
@@ -174,7 +174,7 @@ export function answerFor(question: string): Answer {
           probe: "Where did my money go?",
         },
       ],
-      total: { label: "Net cash flow", value: net, signed: true },
+      total: { label: "Net cash flow", value: net, signed: true, token: "--color-net" },
     },
     followUps: ["Where did my money go?", "How does this month compare?"],
   };

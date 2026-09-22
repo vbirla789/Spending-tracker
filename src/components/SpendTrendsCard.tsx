@@ -338,11 +338,18 @@ function MonthlyBody({ average }: { average: number }) {
                   {/* The outline is the selection mark, and it travels with
                       the tap — it opens on the month in progress but isn't
                       its property. The colour flip is a transition so the
-                      mark visibly hands over rather than teleporting. */}
+                      mark visibly hands over rather than teleporting.
+
+                      No bottom edge: the bar stands on the axis rule, and
+                      drawing its own floor a pixel above that read as a
+                      closed box hovering rather than a column planted on
+                      the baseline. */}
                   <motion.div
                     className={[
                       "absolute bottom-0 border transition-colors duration-200",
-                      selected ? "border-black bg-white" : "border-transparent bg-bar",
+                      selected
+                        ? "border-black border-b-transparent bg-white"
+                        : "border-transparent bg-bar",
                     ].join(" ")}
                     style={{ left: (M_PITCH - M_BAR_W) / 2, width: M_BAR_W }}
                     initial={false}
