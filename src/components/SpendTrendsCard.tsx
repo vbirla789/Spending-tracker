@@ -7,12 +7,18 @@ import { percent, rupees, sum } from "../lib/format";
 /* Monthly geometry — Figma 1489:165547, horizontals scaled 1.5× into a
    pannable rail (see the README). Vertical geometry untouched.        */
 
-const M_SCALE = 1.5;
 const M_PLOT_H = 167;
-const M_BAR_W = 24 * M_SCALE;
-const M_PITCH = 59.4 * M_SCALE;
-const M_GUIDES = [34.5, 96.5, 158.5, 221.5, 283.5].map((x) => x * M_SCALE);
-const M_AVG_W = 283 * M_SCALE;
+/** 24px bars on a 60px pitch — a 36px gap between neighbours, with each
+    divider guide sitting dead centre in it, 18px off either bar. */
+const M_BAR_W = 24;
+const M_PITCH = 60;
+/** Air after the last bar so the callout's right half isn't clipped by the
+    rail edge. */
+const M_PAD_RIGHT = 20;
+/** One guide per gap, on the half-pixel so a 1px dashed line stays crisp. */
+const M_GUIDES = [1, 2, 3, 4, 5].map((i) => i * M_PITCH - 18 + 0.5);
+/** Stops 14px short of the live bar, the file's own clearance. */
+const M_AVG_W = (SPEND_TRENDS.length - 1) * M_PITCH - 14;
 const M_GUIDE_UP = 14;
 const M_GUIDE_DOWN = 25;
 const TRACK_W = 30;
@@ -207,7 +213,13 @@ function MonthlyBody({ average }: { average: number }) {
   const current = SPEND_TRENDS[SPEND_TRENDS.length - 1];
   const height = (value: number) => (value / ceiling) * M_PLOT_H;
   const plotW = (SPEND_TRENDS.length - 1) * M_PITCH + M_BAR_W;
-  const liveX = (SPEND_TRENDS.length - 1) * M_PITCH + M_BAR_W / 2;
+
+  /* Tap a month and the callout walks over to it with that month's figure —
+     same idea as the daily scrubber, at month grain. Opens on the month in
+     progress, which is what the file draws. */
+  const [selIdx, setSelIdx] = useState(SPEND_TRENDS.length - 1);
+  const selMonth = SPEND_TRENDS[selIdx];
+  const selX = selIdx * M_PITCH + M_BAR_W / 2;
 
   const rail = useRef<HTMLDivElement>(null);
   /* 0 = fully scrolled back, 1 = at the present. Drives the indicator, so the
@@ -239,7 +251,9 @@ function MonthlyBody({ average }: { average: number }) {
         onScroll={sync}
         className="rail -mx-[16px] w-[calc(100%+32px)] overflow-x-auto px-[16px]"
       >
-        <div className="flex flex-col" style={{ width: plotW }}>
+        {/* The extra right padding keeps the callout's overhang inside the
+            scrollable content instead of clipped at its edge. */}
+        <div className="flex flex-col" style={{ width: plotW + M_PAD_RIGHT }}>
           <div className="relative" style={{ width: plotW, height: M_PLOT_H }}>
             {/* One SVG for the guides so the 2-2 dash pattern is exact — a
                 CSS dashed border rounds the pattern to fit the edge. */}
@@ -268,18 +282,30 @@ function MonthlyBody({ average }: { average: number }) {
             {SPEND_TRENDS.map((month, i) => {
               const live = month.key === current.key;
               return (
-                <motion.div
+                <button
                   key={month.key}
-                  className={
-                    live
-                      ? "absolute bottom-0 border border-black bg-white"
-                      : "absolute bottom-0 bg-bar"
-                  }
-                  style={{ left: i * M_PITCH, width: M_BAR_W }}
-                  initial={false}
-                  animate={{ height: height(month.amount) }}
-                  transition={{ duration: 0.45, ease: EASE }}
-                />
+                  type="button"
+                  aria-label={`${month.label}: ${rupees(month.amount)}`}
+                  aria-pressed={i === selIdx}
+                  onClick={() => setSelIdx(i)}
+                  /* The hit area is the whole column, not the sliver of bar —
+                     a 24px target at the bottom of a 167px plot is a stretch
+                     to hit; the full pitch height isn't. */
+                  className="absolute bottom-0 top-0"
+                  style={{ left: i * M_PITCH - (M_PITCH - M_BAR_W) / 2, width: M_PITCH }}
+                >
+                  <motion.div
+                    className={
+                      live
+                        ? "absolute bottom-0 border border-black bg-white"
+                        : "absolute bottom-0 bg-bar"
+                    }
+                    style={{ left: (M_PITCH - M_BAR_W) / 2, width: M_BAR_W }}
+                    initial={false}
+                    animate={{ height: height(month.amount) }}
+                    transition={{ duration: 0.45, ease: EASE }}
+                  />
+                </button>
               );
             })}
 
@@ -300,19 +326,19 @@ function MonthlyBody({ average }: { average: number }) {
               <div className="h-px flex-1 border-t border-dashed border-gain" />
             </div>
 
-            {/* Rides 8px above the live bar's top edge, so it tracks the value
-                instead of being parked at a hard-coded y. */}
+            {/* Rides 8px above the selected bar's top edge and walks between
+                months on tap — it tracks a value, not a parking spot. */}
             <div
-              className="absolute flex flex-col items-center drop-shadow-[0_2px_0_rgba(0,0,0,0.25)]"
-              style={{
-                left: liveX,
-                bottom: height(current.amount) + 8,
-                transform: "translateX(-50%)",
-              }}
+              /* A CSS transition, not framer: with the popLayout ancestor,
+                 framer stopped retargeting this element's `left` on update —
+                 the callout always sat one selection behind. CSS transitions
+                 have no opinion about the tree above them. */
+              className="pointer-events-none absolute flex -translate-x-1/2 flex-col items-center drop-shadow-[0_2px_0_rgba(0,0,0,0.25)] transition-[left,bottom] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+              style={{ left: selX, bottom: height(selMonth.amount) + 8 }}
             >
               <div className="rounded-[3px] bg-white px-[8px] py-[4px]">
                 <p className="whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4] text-black">
-                  {thousands(current.amount)}
+                  {thousands(selMonth.amount)}
                 </p>
               </div>
               <img
@@ -333,8 +359,8 @@ function MonthlyBody({ average }: { average: number }) {
                 <p
                   key={month.key}
                   className={[
-                    "absolute -translate-x-1/2 whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4]",
-                    month.key === current.key ? "text-black" : "text-axis",
+                    "absolute -translate-x-1/2 whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4] transition-colors duration-200",
+                    i === selIdx ? "text-black" : "text-axis",
                   ].join(" ")}
                   style={{ left: i * M_PITCH + M_BAR_W / 2 }}
                 >
@@ -513,8 +539,10 @@ function DailyBody() {
                 />
                 {col.amount > 0 && (
                   <motion.div
-                    className="absolute bottom-0 w-[4px] -translate-x-1/2 bg-[#cfcfcf]"
-                    style={{ left: i * D_PITCH + 0.5 }}
+                    className="absolute bottom-0 w-[4px] bg-[#cfcfcf]"
+                    /* Static centring offset, not a translate class — framer
+                       owns the transform once it animates. */
+                    style={{ left: i * D_PITCH - 1.5 }}
                     initial={{ height: 0 }}
                     animate={{ height: barH(col.amount) }}
                     transition={{ duration: 0.4, ease: EASE, delay: 0.04 * i }}
@@ -545,7 +573,8 @@ function DailyBody() {
               />
             ))}
             <motion.div
-              className="absolute top-0 h-full w-[3px] -translate-x-[1px] bg-black"
+              className="absolute top-0 h-full w-[3px] bg-black"
+              style={{ x: -1 }}
               initial={false}
               animate={{ left: selX }}
               transition={{ duration: 0.22, ease: EASE }}
@@ -606,7 +635,7 @@ function DailyBody() {
               key={t}
               className="tnum whitespace-nowrap font-serif text-[10px] font-semibold leading-[1.3] text-ink-dim"
             >
-              ₹{t === 0 ? "0" : (t / 1000).toFixed(1).replace(/\.0$/, "")}
+              ₹{t === 0 ? "0" : `${(t / 1000).toFixed(1).replace(/\.0$/, "")}K`}
             </p>
           ))}
         </div>
