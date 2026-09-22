@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { CASH_FLOW } from "../data";
 import Money from "../lib/mask";
+import useDragScroll from "../lib/useDragScroll";
 
 /** Tallest bar in the design. Every bar is scaled against the same ceiling. */
 const BAR_MAX_PX = 52;
@@ -26,6 +27,20 @@ export default function CashFlowSection() {
   const scale = (value: number) => Math.max(4, Math.round((value / ceiling) * BAR_MAX_PX));
 
   const net = active.income - active.expenses;
+
+  /* Touch pans the tile rail natively; a mouse has no gesture for it, so
+     grab-and-drag stands in on laptops. Dragging suppresses the tile click. */
+  const rail = useRef<HTMLDivElement>(null);
+  useDragScroll(rail);
+
+  /* Parked at the newest month by scroll position, NOT justify-end: a
+     justify-end flex scroller pushes its overflow past the start edge, where
+     scrollLeft can never go — the older months were unreachable on every
+     input, which read as "the rail doesn't scroll". */
+  useLayoutEffect(() => {
+    const el = rail.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
 
   return (
     /* Now a card like the others, rather than bare section on the canvas —
@@ -57,11 +72,12 @@ export default function CashFlowSection() {
             below while the older ones run out under the card edge.
             justify-end parks it on that newest tile. */}
         <div
-          className="rail -mx-[16px] flex w-[calc(100%+32px)] justify-end gap-[16px] overflow-x-auto px-[16px]"
+          ref={rail}
+          className="rail -mx-[16px] flex w-[calc(100%+32px)] gap-[16px] overflow-x-auto px-[16px]"
           role="tablist"
           aria-label="Month"
         >
-          {CASH_FLOW.map((month) => {
+          {CASH_FLOW.map((month, i) => {
             const selected = month.key === activeKey;
             return (
               <button
@@ -71,6 +87,9 @@ export default function CashFlowSection() {
                 aria-selected={selected}
                 onClick={() => setActiveKey(month.key)}
                 className={[
+                  // ml-auto on the first tile right-aligns the row when it
+                  // fits without the justify-end overflow trap.
+                  i === 0 ? "ml-auto" : "",
                   // 78×104 from the Figma. justify-end pins the bars and label
                   // to the bottom, so short months leave their headroom above
                   // rather than floating mid-tile.
