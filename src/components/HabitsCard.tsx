@@ -8,7 +8,9 @@ import Money from "../lib/mask";
 const SIZE = 167;
 const STROKE = 18;
 const RADIUS = (SIZE - STROKE) / 2;
-const GAP = 14;
+/* Along the circumference, between flat arc ends — the file's arcs are
+   radial cuts with a thin wedge of air, not round caps (1497:199317). */
+const GAP = 5;
 
 /**
  * Category breakdown for one month.
@@ -31,7 +33,6 @@ export default function HabitsCard() {
   const arcs = donutArcs(
     ring.map((c) => c.amount / total),
     RADIUS,
-    STROKE,
     GAP,
   );
 
@@ -138,7 +139,6 @@ export default function HabitsCard() {
                     r={RADIUS}
                     stroke={`var(${cat.token})`}
                     strokeWidth={STROKE}
-                    strokeLinecap="round"
                     strokeDasharray={`${arcs[i].dash} ${arcs[i].circumference - arcs[i].dash}`}
                     initial={false}
                     animate={{ strokeDashoffset: arcs[i].offset }}
