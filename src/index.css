@@ -15,6 +15,10 @@
      from Figma 1333:436761. */
   --color-canvas: #fafafc; /* screen background */
   --color-card: #ffffff;
+  /* The daily chart's callout and date pills. Deliberately almost the canvas
+     rather than the cards' white — they float over the plot, and a white chip
+     there read as a hole punched in the paper. Its shadow does the lifting. */
+  --color-tip: #fafafa;
   --color-hair: #f0f0f0; /* card border, month tile border, dividers */
   --color-hair-icon: #ebebeb; /* the two circular header buttons */
   --color-hair-pill: #e0e0e0; /* range pill border — a step darker than -hair */
@@ -145,6 +149,16 @@ button {
    drop shadow — not a blur. Kept as a utility so every card matches. */
 .card-shadow {
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+/* The daily chart's callout and its two date pills. Two layers, straight from
+   the file: a hard 2px offset that reads as a lifted paper edge, plus a short
+   soft one underneath it. The fill is a hair off the canvas, so the shadow is
+   what actually separates these from the dot paper — a single soft shadow left
+   them looking printed onto it. Applied as a filter so it wraps the pointer
+   triangle too, which a box-shadow would square off. */
+.tip-shadow {
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.25)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
 }
 
 /* On a real phone the device draws its own status bar and home indicator, so
