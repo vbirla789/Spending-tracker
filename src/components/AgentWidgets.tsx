@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useMemo, useState, type ReactNode } from "react";
-import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS, JUL_DAILY } from "../data";
+import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS, JUL_DAILY, RING_ORDER } from "../data";
+import { donutArcs } from "../lib/chart";
 import { rupees, sum } from "../lib/format";
 import Money from "../lib/mask";
 
@@ -17,6 +18,9 @@ import Money from "../lib/mask";
 export type AgentWidget =
   | { kind: "whatif"; catKey: string }
   | { kind: "monthline" }
+  | { kind: "ring" }
+  | { kind: "trend"; catKey: string }
+  | { kind: "projection" }
   | { kind: "flowbar" };
 
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
@@ -206,21 +210,49 @@ function cumulative(values: number[]): number[] {
   return out;
 }
 
-/** Catmull-Rom through the points, emitted as cubic Béziers — the soft curve
-    the inspiration card draws, without a chart library. */
-function smoothPath(pts: { x: number; y: number }[]): string {
-  if (pts.length < 2) return "";
+/**
+ * A monotone cubic through the points (Fritsch–Carlson), as cubic Béziers.
+ *
+ * Catmull-Rom was drawing a snake: it sets each tangent from the neighbours
+ * either side, so a flat day between two spending days gets a slope anyway
+ * and the curve bulges past its own points, over and over. Cumulative spend
+ * only ever goes up, and this keeps the curve monotone — every segment is
+ * clamped so it can't overshoot the values it joins. Flat stretches stay
+ * flat, jumps stay crisp, and the line reads as an accumulation.
+ */
+function monotonePath(pts: { x: number; y: number }[]): string {
+  const n = pts.length;
+  if (n < 2) return "";
+
+  const dx: number[] = [];
+  const slope: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx[i] = pts[i + 1].x - pts[i].x;
+    slope[i] = (pts[i + 1].y - pts[i].y) / dx[i];
+  }
+
+  /* Tangents: zero wherever the data turns, so the curve can't round a
+     corner into an overshoot; the weighted harmonic mean elsewhere. */
+  const t: number[] = Array.from({ length: n });
+  t[0] = slope[0];
+  t[n - 1] = slope[n - 2];
+  for (let i = 1; i < n - 1; i++) {
+    if (slope[i - 1] * slope[i] <= 0) {
+      t[i] = 0;
+    } else {
+      const w1 = 2 * dx[i] + dx[i - 1];
+      const w2 = dx[i] + 2 * dx[i - 1];
+      t[i] = (w1 + w2) / (w1 / slope[i - 1] + w2 / slope[i]);
+    }
+  }
+
   let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[Math.max(0, i - 1)];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[Math.min(pts.length - 1, i + 2)];
-    const c1x = p1.x + (p2.x - p0.x) / 6;
-    const c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6;
-    const c2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i] / 3;
+    d +=
+      ` C${(pts[i].x + h).toFixed(1)},${(pts[i].y + t[i] * h).toFixed(1)}` +
+      ` ${(pts[i + 1].x - h).toFixed(1)},${(pts[i + 1].y - t[i + 1] * h).toFixed(1)}` +
+      ` ${pts[i + 1].x.toFixed(1)},${pts[i + 1].y.toFixed(1)}`;
   }
   return d;
 }
@@ -316,7 +348,7 @@ export function MonthLineCard() {
             return (
               <g key={m.key}>
                 <motion.path
-                  d={smoothPath(m.pts)}
+                  d={monotonePath(m.pts)}
                   fill="none"
                   stroke={m.colour}
                   strokeWidth={m.solid ? 2 : 1.5}
@@ -468,5 +500,333 @@ export function FlowBar() {
         />
       ))}
     </div>
+  );
+}
+
+/* ================================================================== */
+/* Category ring — the split, as something you interrogate            */
+
+const RING_SIZE = 150;
+const RING_STROKE = 16;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_GAP = 5;
+
+/**
+ * "Where did my money go?" as a ring you can question rather than a table
+ * you read down.
+ *
+ * Tap an arc or a row and the centre becomes that category — its share, its
+ * figure — while the rest of the ring recedes. The follow-up under it is
+ * built from whatever is selected, so the next question is always about the
+ * thing you just pointed at.
+ */
+export function CategoryRing({ onAsk }: { onAsk: (q: string) => void }) {
+  const month = HABITS[0];
+  const total = sum(month.categories.map((c) => c.amount));
+  const ring = RING_ORDER.map((key) => month.categories.find((c) => c.key === key)!);
+  const arcs = donutArcs(
+    ring.map((c) => c.amount / total),
+    RING_RADIUS,
+    RING_GAP,
+  );
+
+  /* Opens on the largest slice — the answer to the question as asked. */
+  const biggest = [...month.categories].sort((a, b) => b.amount - a.amount)[0];
+  const [selKey, setSelKey] = useState(biggest.key);
+  const sel = month.categories.find((c) => c.key === selKey) ?? biggest;
+  const share = Math.round((sel.amount / total) * 100);
+
+  return (
+    <AnswerCard title={`${month.label} breakdown`}>
+      <div className="flex flex-col gap-[16px]">
+        <div className="relative mx-auto" style={{ width: RING_SIZE, height: RING_SIZE }}>
+          <svg viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} className="size-full" aria-hidden="true">
+            <g transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`} fill="none">
+              {ring.map((cat, i) => (
+                <motion.circle
+                  key={cat.key}
+                  cx={RING_SIZE / 2}
+                  cy={RING_SIZE / 2}
+                  r={RING_RADIUS}
+                  stroke={`var(${cat.token})`}
+                  strokeWidth={RING_STROKE}
+                  strokeDasharray={`${arcs[i].dash} ${arcs[i].circumference - arcs[i].dash}`}
+                  strokeDashoffset={arcs[i].offset}
+                  className="cursor-pointer"
+                  style={{ pointerEvents: "stroke" }}
+                  onClick={() => setSelKey(cat.key)}
+                  initial={false}
+                  /* Unselected arcs fall back rather than disappear — the
+                     slice you picked has to be read against the whole. */
+                  animate={{ opacity: cat.key === selKey ? 1 : 0.22 }}
+                  transition={{ duration: 0.25, ease: EASE }}
+                />
+              ))}
+            </g>
+          </svg>
+
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[2px]">
+            <p className="tnum font-serif text-[22px] font-semibold leading-[1.3] text-black">
+              {rupees(sel.amount)}
+            </p>
+            <p className="font-mono text-[11px] font-medium uppercase leading-[1.4] text-ink-dim">
+              {sel.label}
+            </p>
+            <p className="tnum font-mono text-[11px] font-medium leading-[1.4] text-ink-dim">
+              {share}% of {rupees(total)}
+            </p>
+          </div>
+        </div>
+
+        <CardRule />
+
+        <div className="flex flex-col gap-[12px]">
+          {month.categories.map((cat) => {
+            const on = cat.key === selKey;
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setSelKey(cat.key)}
+                className="flex w-full items-center justify-between"
+              >
+                <div className="flex items-center gap-[8px]">
+                  <motion.div
+                    className="size-[12px] shrink-0 rounded-[2px]"
+                    style={{ background: `var(${cat.token})` }}
+                    initial={false}
+                    animate={{ opacity: on ? 1 : 0.35 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                  <p
+                    className={`font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] transition-colors duration-200 ${on ? "text-black" : "text-ink-dim"}`}
+                  >
+                    {cat.label}
+                  </p>
+                </div>
+                <Money
+                  value={cat.amount}
+                  className={`tnum font-serif text-[14px] font-semibold leading-[1.3] transition-colors duration-200 ${on ? "text-black" : "text-ink-dim"}`}
+                />
+              </button>
+            );
+          })}
+        </div>
+
+        <CardRule />
+
+        {/* Reads off the selection, so the way onward is always about the
+            slice under your finger rather than a fixed next question. */}
+        <button
+          type="button"
+          onClick={() => onAsk(`Why is ${sel.label.toLowerCase()} so high?`)}
+          className="flex h-[36px] w-full items-center justify-center rounded-[50px] border border-chip-edge bg-chip font-mono text-[12px] font-medium leading-[1.4] tracking-[0.6px] text-black transition-transform duration-150 active:scale-95"
+        >
+          Why is {sel.label.toLowerCase()} so high?
+        </button>
+      </div>
+    </AnswerCard>
+  );
+}
+
+/* ================================================================== */
+/* Category trend — one category across the months we hold            */
+
+/**
+ * A category over time as bars you can tap, rather than three rows of
+ * figures. Selecting a month moves the readout and recomputes the delta
+ * against the month before it, so the comparison is the thing you're
+ * steering instead of a fixed line at the bottom.
+ */
+export function CategoryTrend({ catKey }: { catKey: string }) {
+  const series = HABITS.map((m) => ({
+    key: m.key,
+    label: m.label,
+    amount: m.categories.find((c) => c.key === catKey)?.amount ?? 0,
+  }))
+    /* HABITS is newest-first; a trend has to read oldest to newest. */
+    .reverse();
+
+  const cat = HABITS[0].categories.find((c) => c.key === catKey) ?? HABITS[0].categories[0];
+  const ceiling = Math.max(...series.map((s) => s.amount));
+  const [selIdx, setSelIdx] = useState(series.length - 1);
+  const sel = series[selIdx];
+  const prev = selIdx > 0 ? series[selIdx - 1] : null;
+  const delta = prev ? sel.amount - prev.amount : 0;
+
+  return (
+    <AnswerCard
+      title={`${cat.label} over time`}
+      trailing={
+        <p className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black">
+          {rupees(sel.amount)}
+        </p>
+      }
+    >
+      <div className="flex flex-col gap-[16px]">
+        <div className="flex h-[96px] items-end justify-between gap-[12px]">
+          {series.map((m, i) => {
+            const on = i === selIdx;
+            return (
+              <button
+                key={m.key}
+                type="button"
+                aria-pressed={on}
+                aria-label={`${m.label}: ${rupees(m.amount)}`}
+                onClick={() => setSelIdx(i)}
+                className="flex h-full flex-1 flex-col items-center justify-end gap-[8px]"
+              >
+                <motion.div
+                  className="w-full rounded-[2px]"
+                  style={{ background: `var(${cat.token})` }}
+                  initial={{ height: 0 }}
+                  animate={{
+                    height: (m.amount / ceiling) * 70,
+                    opacity: on ? 1 : 0.28,
+                  }}
+                  transition={{ duration: 0.4, ease: EASE, delay: 0.06 * i }}
+                />
+                <p
+                  className={`font-mono text-[12px] font-medium uppercase leading-[1.4] transition-colors duration-200 ${on ? "text-black" : "text-ink-dim"}`}
+                >
+                  {m.label}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        <CardRule />
+
+        <div className="flex w-full items-center justify-between">
+          <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+            {prev ? `Change vs ${prev.label}` : "Earliest month held"}
+          </p>
+          {prev ? (
+            <Money
+              value={delta}
+              signed
+              className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
+            />
+          ) : (
+            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+              —
+            </p>
+          )}
+        </div>
+      </div>
+    </AnswerCard>
+  );
+}
+
+/* ================================================================== */
+/* Projection — what this month's rate is worth, held                 */
+
+const PROJ_HORIZONS = [6, 12, 24] as const;
+const PROJ_W = 280;
+const PROJ_H = 90;
+
+/**
+ * "What's driving my net worth?" answered as a forecast you can stretch
+ * rather than a figure you're told.
+ *
+ * The month's net is the rate; the pills change how long you hold it, and
+ * the curve and the endpoint redraw. It's the counterfactual the brief asks
+ * for — a number you can push on — built from the same cash flow the screen
+ * behind it shows.
+ */
+export function SavingsProjection() {
+  const month = CASH_FLOW[CASH_FLOW.length - 1];
+  const rate = month.income - month.expenses;
+  const [horizon, setHorizon] = useState<number>(12);
+
+  const total = rate * horizon;
+  /* Always plotted against the longest horizon, so switching stretches the
+     curve along a fixed axis instead of rescaling the whole chart. */
+  const ceiling = rate * PROJ_HORIZONS[PROJ_HORIZONS.length - 1];
+  const pts = Array.from({ length: horizon + 1 }, (_, i) => ({
+    x: (i / PROJ_HORIZONS[PROJ_HORIZONS.length - 1]) * PROJ_W,
+    y: PROJ_H - ((rate * i) / ceiling) * PROJ_H,
+  }));
+  const end = pts[pts.length - 1];
+
+  return (
+    <AnswerCard
+      title="If you keep this rate"
+      trailing={
+        <Money
+          value={total}
+          className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
+        />
+      }
+    >
+      <div className="flex flex-col gap-[16px]">
+        <svg
+          viewBox={`-4 -6 ${PROJ_W + 8} ${PROJ_H + 12}`}
+          className="h-auto w-full"
+          role="img"
+          aria-label={`${rupees(total)} saved over ${horizon} months at ${rupees(rate)} a month`}
+        >
+          <line
+            x1={0}
+            x2={PROJ_W}
+            y1={PROJ_H}
+            y2={PROJ_H}
+            stroke="var(--color-bar)"
+            strokeDasharray="2 2"
+          />
+          <motion.path
+            d={monotonePath(pts)}
+            fill="none"
+            stroke="var(--color-income)"
+            strokeWidth={2}
+            initial={false}
+            animate={{ d: monotonePath(pts) }}
+            transition={{ duration: 0.4, ease: EASE }}
+          />
+          <motion.circle
+            r={4.5}
+            fill="var(--color-income)"
+            initial={false}
+            animate={{ cx: end.x, cy: end.y }}
+            transition={{ duration: 0.4, ease: EASE }}
+          />
+        </svg>
+
+        <div className="flex items-center gap-[8px]">
+          {PROJ_HORIZONS.map((h) => (
+            <button
+              key={h}
+              type="button"
+              aria-pressed={h === horizon}
+              onClick={() => setHorizon(h)}
+              className={[
+                "rounded-[50px] px-[12px] py-[6px] font-mono text-[12px] font-medium uppercase leading-[1.4]",
+                "transition-colors duration-150 active:scale-95",
+                h === horizon
+                  ? "border border-hair-pill bg-white text-black"
+                  : "border border-transparent text-ink-dim",
+              ].join(" ")}
+            >
+              {h === 24 ? "2 years" : h === 12 ? "1 year" : `${h} months`}
+            </button>
+          ))}
+        </div>
+
+        <CardRule />
+
+        <div className="flex w-full items-center justify-between">
+          <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
+            Kept each month
+          </p>
+          <Money
+            value={rate}
+            signed
+            className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
+          />
+        </div>
+      </div>
+    </AnswerCard>
   );
 }

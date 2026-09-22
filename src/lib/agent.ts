@@ -37,12 +37,20 @@ export type Answer = {
   followUps: string[];
 };
 
-/** The chips on the entry screen, and what the agent can answer cold. */
+/**
+ * The chips on the entry screen, and what the agent can answer cold.
+ *
+ * Every one of these lands on something you can touch — a ring you can
+ * interrogate, a slider, a filter, a forecast you can stretch. A question
+ * whose best answer is a table of figures doesn't earn a chip here: the
+ * whole claim of this screen is that the answer is a thing you can push on,
+ * so the prompts have to advertise that.
+ */
 export const SUGGESTIONS = [
   "Where did my money go?",
-  "Why is this month different?",
-  "What changed since August?",
-  "What's driving my net worth?",
+  "What if I cut food & dining?",
+  "How does this month compare?",
+  "What if I keep saving like this?",
 ] as const;
 
 /** Surfaced on the Overview card as the daily prompt. */
@@ -98,12 +106,8 @@ export function answerFor(question: string): Answer {
     return {
       body: `${cat.label} is ${rupees(cat.amount)} this month, ${
         change >= 0 ? "up" : "down"
-      } ${rupees(change)} on ${history[1].label}.\n\nThe last three months:`,
-      card: {
-        title: `${cat.label} over time`,
-        rows: history.map((h) => ({ label: h.label, value: h.amount, token: cat.token })),
-        total: { label: `Change vs ${history[1].label}`, value: change, signed: true },
-      },
+      } ${rupees(change)} on ${history[1].label}.\n\nTap a month to compare it against the one before:`,
+      widget: { kind: "trend", catKey: cat.key },
       followUps: [`Cut ${cat.label.toLowerCase()} in half?`, "Where did my money go?"],
     };
   }
@@ -116,41 +120,25 @@ export function answerFor(question: string): Answer {
     return {
       body: `Most of it went to ${top.label.toLowerCase()} — ${Math.round(
         (top.amount / total) * 100,
-      )}% of everything you spent in ${habits.label}.\n\nHere's the split — tap any line to go deeper:`,
-      card: {
-        title: `${habits.label} breakdown`,
-        rows: habits.categories.map((c) => ({
-          label: c.label,
-          value: c.amount,
-          token: c.token,
-          probe: `Why is ${c.label.toLowerCase()} so high?`,
-        })),
-        total: { label: "Total spent", value: total, signed: false },
-      },
-      followUps: [`Cut ${top.label.toLowerCase()} in half?`, "What changed since August?"],
+      )}% of everything you spent in ${habits.label}.\n\nTap a slice to pull it out:`,
+      widget: { kind: "ring" },
+      followUps: [`Cut ${top.label.toLowerCase()} in half?`, "How does this month compare?"],
     };
   }
 
-  // 4. Net worth
-  if (q.includes("net worth") || q.includes("savings rate")) {
+  // 4. What the rate is worth if you hold it
+  if (
+    q.includes("net worth") ||
+    q.includes("savings rate") ||
+    q.includes("keep saving") ||
+    q.includes("keep this")
+  ) {
     return {
       body: `What moves it is what you keep. ${month.label} kept ${rupees(net)} of ${rupees(
         month.income,
-      )} — that's ${Math.round((net / month.income) * 100)}%.\n\nThe last full month:`,
-      card: {
-        title: `${month.label} analysis`,
-        rows: [
-          { label: "Income", value: month.income, token: "--color-income" },
-          {
-            label: "Expenses",
-            value: -month.expenses,
-            token: "--color-expense",
-            probe: "Where did my money go?",
-          },
-        ],
-        total: { label: "Added to net worth", value: net, signed: true },
-      },
-      followUps: ["Where did my money go?", "What changed since August?"],
+      )} — that's ${Math.round((net / month.income) * 100)}%.\n\nStretch it out and see what that's worth:`,
+      widget: { kind: "projection" },
+      followUps: ["Where did my money go?", "How does this month compare?"],
     };
   }
 
@@ -164,7 +152,7 @@ export function answerFor(question: string): Answer {
         diff >= 0 ? "more" : "less"
       } than by this point in Aug.\n\nDay by day. The legend is a filter — bring Jul in for a second baseline:`,
       widget: { kind: "monthline" },
-      followUps: ["Where did my money go?", "What's driving my net worth?"],
+      followUps: ["Where did my money go?", "What if I keep saving like this?"],
     };
   }
 
@@ -188,6 +176,6 @@ export function answerFor(question: string): Answer {
       ],
       total: { label: "Net cash flow", value: net, signed: true },
     },
-    followUps: ["Where did my money go?", "What changed since August?"],
+    followUps: ["Where did my money go?", "How does this month compare?"],
   };
 }
