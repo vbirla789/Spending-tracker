@@ -42,6 +42,9 @@ const D_PAST = 10;
     to the top gridline, and the four y labels sit on a 52px pitch. */
 const D_SCALE_H = 156;
 const D_CEILING = 2_400;
+/** Day bar width. The selection marker and its tick share it, so the three
+    are one column rather than three widths stacked on a shared centre. */
+const D_BAR_W = 4;
 /** How far the beak's tip sits into its 34px box — the apex of the exported
     triangle. The callout is offset by this so its tip, rather than its
     corner, is what lands on the marker. */
@@ -235,11 +238,13 @@ function MonthlyBody({ average }: { average: number }) {
   const height = (value: number) => (value / ceiling) * M_PLOT_H;
   const plotW = (SPEND_TRENDS.length - 1) * M_PITCH + M_BAR_W;
 
-  /* The AVG rule spans exactly the months it averages and stops 14px short of
-     the live one (the file's clearance), so the marker states its own scope —
-     the scrollable history to its left isn't in the figure. */
-  const avgLeft = (SPEND_TRENDS.length - SPEND_AVG_WINDOW) * M_PITCH;
-  const avgWidth = (SPEND_TRENDS.length - 1) * M_PITCH - 14 - avgLeft;
+  /* The AVG rule runs the whole plot, stopping 14px short of the live bar
+     (the file's clearance). It briefly spanned only the six months it
+     averages, to state its own scope — but scrolling back then left the line
+     stranded at the right-hand edge, and a reference level you can't read a
+     bar against is no reference at all. It's a benchmark to measure every
+     month by, so it reaches every month. */
+  const avgWidth = (SPEND_TRENDS.length - 1) * M_PITCH - 14;
 
   /* Tap a month and the callout walks over to it with that month's figure —
      same idea as the daily scrubber, at month grain. Opens on the month in
@@ -272,7 +277,7 @@ function MonthlyBody({ average }: { average: number }) {
   useDragScroll(rail);
 
   return (
-    <div className="flex w-full flex-col items-center gap-[24px]">
+    <div className="relative flex w-full flex-col items-center gap-[24px]">
       {/* Full-bleed, with the page gutter re-applied inside: the chart rests
           flush with the headline above it but runs clean under both screen
           edges once you drag it, rather than stopping short of them.
@@ -349,21 +354,12 @@ function MonthlyBody({ average }: { average: number }) {
             })}
 
             {/* Sits at the average's own height rather than a fixed offset, so
-                the marker can't drift away from the bars it describes. The rule
-                stops short of the live bar — it's the history being averaged,
-                not the month still running. */}
+                the marker can't drift away from the bars it describes. Its
+                label is not in here — see the pill below. */}
             <div
-              className="absolute flex translate-y-1/2 items-center"
-              style={{ bottom: height(average), left: avgLeft, width: avgWidth }}
-            >
-              <div className="h-px flex-1 border-t border-dashed border-gain" />
-              <div className="rounded-[23px] border border-gain bg-white px-[8px] py-[2px]">
-                <p className="whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4] text-gain">
-                  Avg {thousands(average)}
-                </p>
-              </div>
-              <div className="h-px flex-1 border-t border-dashed border-gain" />
-            </div>
+              className="absolute left-0 border-t border-dashed border-gain"
+              style={{ bottom: height(average), width: avgWidth }}
+            />
 
             {/* Rides 8px above the selected bar's top edge and walks between
                 months on tap — it tracks a value, not a parking spot. */}
@@ -423,6 +419,22 @@ function MonthlyBody({ average }: { average: number }) {
           className="absolute top-0 h-full bg-black"
           style={{ width: THUMB_W, left: progress * (TRACK_W - THUMB_W) }}
         />
+      </div>
+
+      {/* The AVG label rides OUTSIDE the scroller, centred on the viewport at
+          the rule's own height, while the dashed rule scrolls underneath it.
+          Centred within the scroll content it sat at the plot's midpoint —
+          which, once the chart carried eleven months, was off-screen at the
+          position the chart actually opens in. Pinned here it is legible in
+          the first fold and stays legible at every scroll position; its solid
+          fill breaks the rule the way the file draws it. */}
+      <div
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[23px] border border-gain bg-white px-[8px] py-[2px]"
+        style={{ top: M_TOP_GAP + M_PLOT_H - height(average) }}
+      >
+        <p className="whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4] text-gain">
+          Avg {thousands(average)}
+        </p>
       </div>
     </div>
   );
@@ -522,9 +534,11 @@ function DailyBody() {
       >
         {/* The date joins the label on one line and the figure sits under it,
             so the card reads as one statement top to bottom instead of a
-            heading over a two-column row. */}
+            heading over a two-column row. The label is dimmed and the figure
+            left black: two lines of equal weight made the reader work out
+            which one was the answer. */}
         <div className="-mb-[3px] flex w-[120px] flex-col gap-[8px] rounded-[6px] bg-tip p-[8px]">
-          <p className="font-mono text-[11px] font-medium uppercase leading-[1.4] text-black">
+          <p className="font-mono text-[11px] font-medium uppercase leading-[1.4] text-ink-dim">
             Spent on {sel.day} Sep
           </p>
           <p className="tnum font-serif text-[12px] font-semibold leading-[1.3] text-black">
@@ -571,10 +585,10 @@ function DailyBody() {
                 />
                 {col.amount > 0 && (
                   <motion.div
-                    className="absolute bottom-0 w-[4px] bg-[#cfcfcf]"
+                    className="absolute bottom-0 bg-[#cfcfcf]"
                     /* Static centring offset, not a translate class — framer
                        owns the transform once it animates. */
-                    style={{ left: i * D_PITCH - 1.5 }}
+                    style={{ left: i * D_PITCH - (D_BAR_W - 1) / 2, width: D_BAR_W }}
                     initial={{ height: 0 }}
                     animate={{ height: barH(col.amount) }}
                     transition={{ duration: 0.4, ease: EASE, delay: 0.04 * i }}
@@ -583,19 +597,26 @@ function DailyBody() {
               </div>
             ))}
 
-            {/* The selection marker: a black hairline from the baseline to the
-                top gridline — the file's 156px — riding over the day's bar. */}
+            {/* The selection marker is the selected day's own bar, redrawn
+                in black: same 4px width, same height, same centre. A
+                full-height rule implied a quantity the day didn't have, and
+                at 1px it read as a line laid across the chart rather than as
+                one of the bars being picked out.
+
+                A day with no spend has no bar, so nothing is drawn here —
+                the tick below the baseline is what carries the selection in
+                that case, and the callout says ₹0. */}
             <motion.div
-              className="absolute bottom-0 w-px bg-black"
-              style={{ height: D_SCALE_H }}
+              className="absolute bottom-0 bg-black"
+              style={{ width: D_BAR_W }}
               initial={false}
-              animate={{ left: selX }}
+              animate={{ left: selX - (D_BAR_W - 1) / 2, height: barH(sel.amount) }}
               transition={{ duration: 0.22, ease: EASE }}
             />
           </div>
 
           {/* Ticks under the baseline: one per day, the selected one black and
-              a step wider, as the file draws it. */}
+              the bar's own width, so marker and tick line up as one column. */}
           <div className="relative mt-[8px] h-[6px]">
             {cols.map((_, i) => (
               <div
@@ -605,10 +626,10 @@ function DailyBody() {
               />
             ))}
             <motion.div
-              className="absolute top-0 h-full w-[3px] bg-black"
-              style={{ x: -1 }}
+              className="absolute top-0 h-full bg-black"
+              style={{ width: D_BAR_W }}
               initial={false}
-              animate={{ left: selX }}
+              animate={{ left: selX - (D_BAR_W - 1) / 2 }}
               transition={{ duration: 0.22, ease: EASE }}
             />
           </div>
