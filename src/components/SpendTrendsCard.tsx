@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { DAILY_SPEND, SPEND_TRENDS, TODAY_DAY } from "../data";
+import { DAILY_SPEND, SPEND_AVG_WINDOW, SPEND_TRENDS, TODAY_DAY } from "../data";
 import { percent, rupees, sum } from "../lib/format";
+import useDragScroll from "../lib/useDragScroll";
 
 /* ------------------------------------------------------------------ */
-/* Monthly geometry — Figma 1489:165547, horizontals scaled 1.5× into a
-   pannable rail (see the README). Vertical geometry untouched.        */
+/* Monthly geometry — Figma 1489:165547 / 1505:199456.                 */
 
 const M_PLOT_H = 167;
 /** 24px bars on a 60px pitch — a 36px gap between neighbours, with each
@@ -16,21 +16,19 @@ const M_PITCH = 60;
     rail edge. */
 const M_PAD_RIGHT = 20;
 /** One guide per gap, on the half-pixel so a 1px dashed line stays crisp. */
-const M_GUIDES = [1, 2, 3, 4, 5].map((i) => i * M_PITCH - 18 + 0.5);
-/** Stops 14px short of the live bar, the file's own clearance. */
-const M_AVG_W = (SPEND_TRENDS.length - 1) * M_PITCH - 14;
+const M_GUIDES = SPEND_TRENDS.slice(1).map((_, i) => (i + 1) * M_PITCH - 18 + 0.5);
 const M_GUIDE_UP = 14;
 const M_GUIDE_DOWN = 25;
 const TRACK_W = 30;
 const THUMB_W = 8;
 
 /* ------------------------------------------------------------------ */
-/* Daily geometry — Figma 1497:199156. 20 day columns justify-between
-   across a 309px plot (343 minus the y-axis labels and their gap),
-   with today always the 11th column, exactly where the file parks its
-   TODAY pill (x=162 ≈ 10 × 16.21). Fits the gutter, so no rail.       */
+/* Daily geometry — Figma 1507:210638. 20 day columns justify-between
+   across a 302px plot (343 minus the 29px y-axis labels and their 12px
+   gap), with today the 11th column — where the file parks its TODAY
+   pill. Fits the gutter, so no rail.                                  */
 
-const D_PLOT_W = 309;
+const D_PLOT_W = 302;
 const D_PLOT_H = 170;
 const D_COLS = 20;
 const D_PITCH = (D_PLOT_W - 1) / (D_COLS - 1);
@@ -41,6 +39,21 @@ const D_PAST = 10;
     to the top gridline, and the four y labels sit on a 52px pitch. */
 const D_SCALE_H = 156;
 const D_CEILING = 2_400;
+
+/**
+ * Both bodies stand exactly this tall, and both hang their plot off the same
+ * 96px top gap.
+ *
+ * The daily view is naturally ~50px taller than the monthly one — it carries
+ * a callout above the plot and two pills below it. Letting the stage animate
+ * between the two heights walked the cash flow and habits cards down the
+ * screen on every switch. Pinning both to the taller figure costs the monthly
+ * view some air above its chart and buys two things: nothing below the
+ * section ever moves, and the two plots occupy the same band, so switching
+ * reads as the bars changing rather than the page relaying out.
+ */
+const STAGE_H = 319;
+const TOP_GAP = 96;
 
 /** ₹10,032 → "₹10k". The design labels in thousands; the data is in rupees. */
 const thousands = (value: number) => `₹${Math.round(value / 1000)}k`;
@@ -72,9 +85,12 @@ export default function SpendTrendsCard() {
   const toggle = () =>
     setState((s) => ({ view: s.view === "monthly" ? "daily" : "monthly", dir: s.view === "monthly" ? 1 : -1 }));
 
-  /* Monthly headline: gap to the six-month average. */
-  const amounts = SPEND_TRENDS.map((m) => m.amount);
-  const average = sum(amounts) / amounts.length;
+  /* Monthly headline: the gap to the trailing average. The window is the last
+     SPEND_AVG_WINDOW months, not the whole array — the earlier months are
+     scrollable history, and rolling them into the average would drag the
+     yardstick away from the half-year the design quotes. */
+  const window = SPEND_TRENDS.slice(-SPEND_AVG_WINDOW);
+  const average = sum(window.map((m) => m.amount)) / window.length;
   const monthlyGap = (average - SPEND_TRENDS[SPEND_TRENDS.length - 1].amount) / average;
   const below = monthlyGap >= 0;
 
@@ -172,14 +188,9 @@ export default function SpendTrendsCard() {
         </div>
       </div>
 
-      {/* The two bodies are different heights (the daily view carries its
-          callout and pills), so the stage animates between them rather than
-          letting the cards below jump. */}
-      <motion.div
-        className="relative w-full"
-        animate={{ height: view === "monthly" ? 270 : 319 }}
-        transition={{ duration: 0.34, ease: EASE }}
-      >
+      {/* A fixed stage, sized to the taller body — see STAGE_H. Nothing below
+          this section moves when the view changes. */}
+      <div className="relative w-full" style={{ height: STAGE_H }}>
         <AnimatePresence mode="popLayout" custom={dir} initial={false}>
           <motion.div
             key={view}
@@ -194,7 +205,7 @@ export default function SpendTrendsCard() {
             {view === "monthly" ? <MonthlyBody average={average} /> : <DailyBody />}
           </motion.div>
         </AnimatePresence>
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -210,9 +221,14 @@ const slideVariants = {
 
 function MonthlyBody({ average }: { average: number }) {
   const ceiling = Math.max(...SPEND_TRENDS.map((m) => m.amount));
-  const current = SPEND_TRENDS[SPEND_TRENDS.length - 1];
   const height = (value: number) => (value / ceiling) * M_PLOT_H;
   const plotW = (SPEND_TRENDS.length - 1) * M_PITCH + M_BAR_W;
+
+  /* The AVG rule spans exactly the months it averages and stops 14px short of
+     the live one (the file's clearance), so the marker states its own scope —
+     the scrollable history to its left isn't in the figure. */
+  const avgLeft = (SPEND_TRENDS.length - SPEND_AVG_WINDOW) * M_PITCH;
+  const avgWidth = (SPEND_TRENDS.length - 1) * M_PITCH - 14 - avgLeft;
 
   /* Tap a month and the callout walks over to it with that month's figure —
      same idea as the daily scrubber, at month grain. Opens on the month in
@@ -241,11 +257,20 @@ function MonthlyBody({ average }: { average: number }) {
     sync();
   }, [sync]);
 
+  /* A mouse can't pan an overflow box; touch can. */
+  useDragScroll(rail);
+
   return (
-    <div className="flex w-full flex-col items-center gap-[24px] pt-[48px]">
+    <div className="flex w-full flex-col items-center gap-[24px]">
       {/* Full-bleed, with the page gutter re-applied inside: the chart rests
           flush with the headline above it but runs clean under both screen
-          edges once you drag it, rather than stopping short of them. */}
+          edges once you drag it, rather than stopping short of them.
+
+          The 48px gap under the headline lives INSIDE the scroll content, not
+          above the rail: the callout stands ~44px proud of the tallest bar,
+          and everything above the rail's content box gets clipped by its
+          overflow — parked outside, the callout vanished whenever the tallest
+          month was selected. */}
       <div
         ref={rail}
         onScroll={sync}
@@ -253,7 +278,7 @@ function MonthlyBody({ average }: { average: number }) {
       >
         {/* The extra right padding keeps the callout's overhang inside the
             scrollable content instead of clipped at its edge. */}
-        <div className="flex flex-col" style={{ width: plotW + M_PAD_RIGHT }}>
+        <div className="flex flex-col" style={{ width: plotW + M_PAD_RIGHT, paddingTop: TOP_GAP }}>
           <div className="relative" style={{ width: plotW, height: M_PLOT_H }}>
             {/* One SVG for the guides so the 2-2 dash pattern is exact — a
                 CSS dashed border rounds the pattern to fit the edge. */}
@@ -280,13 +305,13 @@ function MonthlyBody({ average }: { average: number }) {
             </svg>
 
             {SPEND_TRENDS.map((month, i) => {
-              const live = month.key === current.key;
+              const selected = i === selIdx;
               return (
                 <button
                   key={month.key}
                   type="button"
                   aria-label={`${month.label}: ${rupees(month.amount)}`}
-                  aria-pressed={i === selIdx}
+                  aria-pressed={selected}
                   onClick={() => setSelIdx(i)}
                   /* The hit area is the whole column, not the sliver of bar —
                      a 24px target at the bottom of a 167px plot is a stretch
@@ -294,12 +319,15 @@ function MonthlyBody({ average }: { average: number }) {
                   className="absolute bottom-0 top-0"
                   style={{ left: i * M_PITCH - (M_PITCH - M_BAR_W) / 2, width: M_PITCH }}
                 >
+                  {/* The outline is the selection mark, and it travels with
+                      the tap — it opens on the month in progress but isn't
+                      its property. The colour flip is a transition so the
+                      mark visibly hands over rather than teleporting. */}
                   <motion.div
-                    className={
-                      live
-                        ? "absolute bottom-0 border border-black bg-white"
-                        : "absolute bottom-0 bg-bar"
-                    }
+                    className={[
+                      "absolute bottom-0 border transition-colors duration-200",
+                      selected ? "border-black bg-white" : "border-transparent bg-bar",
+                    ].join(" ")}
                     style={{ left: (M_PITCH - M_BAR_W) / 2, width: M_BAR_W }}
                     initial={false}
                     animate={{ height: height(month.amount) }}
@@ -314,8 +342,8 @@ function MonthlyBody({ average }: { average: number }) {
                 stops short of the live bar — it's the history being averaged,
                 not the month still running. */}
             <div
-              className="absolute left-0 flex translate-y-1/2 items-center"
-              style={{ bottom: height(average), width: M_AVG_W }}
+              className="absolute flex translate-y-1/2 items-center"
+              style={{ bottom: height(average), left: avgLeft, width: avgWidth }}
             >
               <div className="h-px flex-1 border-t border-dashed border-gain" />
               <div className="rounded-[23px] border border-gain bg-white px-[8px] py-[2px]">
@@ -475,29 +503,27 @@ function DailyBody() {
   const ticks = [D_CEILING, D_CEILING * (2 / 3), D_CEILING / 3, 0];
 
   return (
-    <div className="relative flex w-full flex-col pt-[96px]">
+    <div className="relative flex w-full flex-col" style={{ paddingTop: TOP_GAP }}>
       {/* Callout — SPENT ON / date / figure — pointing down at the selected
           column from above the plot, the file's flat 2px drop shadow and all.
           Left edge rides the column (the file parks it flush), clamped so it
           never leaves the plot. */}
       <motion.div
-        className="absolute top-[24px] z-10 flex flex-col items-start drop-shadow-[0px_2px_0px_rgba(0,0,0,0.25)]"
+        className="tip-shadow absolute top-[24px] z-10 flex flex-col items-start"
         initial={false}
         animate={{ left: Math.min(Math.max(selX - 1, 0), D_PLOT_W - 120) }}
         transition={{ duration: 0.22, ease: EASE }}
       >
-        <div className="-mb-[3px] flex w-[120px] flex-col gap-[12px] rounded-[6px] bg-white p-[8px]">
+        {/* The date joins the label on one line and the figure sits under it,
+            so the card reads as one statement top to bottom instead of a
+            heading over a two-column row. */}
+        <div className="-mb-[3px] flex w-[120px] flex-col gap-[8px] rounded-[6px] bg-tip p-[8px]">
           <p className="font-mono text-[11px] font-medium uppercase leading-[1.4] text-black">
-            Spent on
+            Spent on {sel.day} Sep
           </p>
-          <div className="flex w-full items-start justify-between">
-            <p className="font-mono text-[11px] font-medium uppercase leading-[1.4] text-black">
-              {sel.day} Sep
-            </p>
-            <p className="tnum font-serif text-[12px] font-semibold leading-[1.3] text-black">
-              {rupees(sel.amount)}
-            </p>
-          </div>
+          <p className="tnum font-serif text-[12px] font-semibold leading-[1.3] text-black">
+            {rupees(sel.amount)}
+          </p>
         </div>
         <img src="/icons/pointer-wide.svg" alt="" className="block h-[8px] w-[34px]" />
       </motion.div>
@@ -589,7 +615,7 @@ function DailyBody() {
           <div className="relative mt-[3px] h-[36px]">
             {selIdx !== todayIdx && (
               <motion.div
-                className="absolute top-0 flex flex-col items-start drop-shadow-[0px_2px_0px_rgba(0,0,0,0.25)]"
+                className="tip-shadow absolute top-0 flex flex-col items-start"
                 initial={false}
                 animate={{ left: datePillLeft }}
                 transition={{ duration: 0.22, ease: EASE }}
@@ -599,7 +625,7 @@ function DailyBody() {
                   alt=""
                   className="-mb-[3px] block h-[8px] w-[34px] -scale-y-100"
                 />
-                <div className="rounded-[6px] bg-white p-[8px]">
+                <div className="rounded-[6px] bg-tip p-[8px]">
                   <p className="whitespace-nowrap font-mono text-[11px] font-medium uppercase leading-[1.4] text-black">
                     {sel.day} Sep
                   </p>
@@ -607,7 +633,7 @@ function DailyBody() {
               </motion.div>
             )}
             <motion.div
-              className="absolute top-0 flex flex-col items-start drop-shadow-[0px_2px_0px_rgba(0,0,0,0.25)]"
+              className="tip-shadow absolute top-0 flex flex-col items-start"
               style={{ left: todayIdx * D_PITCH }}
               initial={false}
               animate={{ opacity: pillsCollide ? 0 : 1 }}
@@ -618,7 +644,7 @@ function DailyBody() {
                 alt=""
                 className="-mb-[3px] block h-[8px] w-[34px] -scale-y-100"
               />
-              <div className="rounded-[6px] bg-white p-[8px]">
+              <div className="rounded-[6px] bg-tip p-[8px]">
                 <p className="whitespace-nowrap font-mono text-[11px] font-medium uppercase leading-[1.4] text-black">
                   Today
                 </p>
@@ -628,8 +654,9 @@ function DailyBody() {
         </div>
 
         {/* Y labels, 10px serif on the file's 52px pitch (13px label + 39px
-            gap), hung off the plot's right edge. */}
-        <div className="flex w-[22px] shrink-0 flex-col gap-[39px]">
+            gap), hung off the plot's right edge. 29px wide, which is what the
+            ₹2.4K form needs — at 22px the unit wrapped. */}
+        <div className="flex w-[29px] shrink-0 flex-col gap-[39px]">
           {ticks.map((t) => (
             <p
               key={t}

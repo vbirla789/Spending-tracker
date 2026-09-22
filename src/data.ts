@@ -26,6 +26,15 @@ export type SpendMonth = {
  * together.
  */
 export const SPEND_TRENDS: SpendMonth[] = [
+  /* History you can scroll back into. These sit outside the averaged window
+     on purpose — see SPEND_AVG_WINDOW — so adding them can't move the
+     headline the design specifies. */
+  { key: "oct", label: "Oct", amount: 11_240 },
+  { key: "nov", label: "Nov", amount: 8_470 },
+  { key: "dec", label: "Dec", amount: 16_980 },
+  { key: "jan", label: "Jan", amount: 7_320 },
+  { key: "feb", label: "Feb", amount: 12_610 },
+  /* The averaged window begins here. */
   { key: "mar", label: "Mar", amount: 9_086 },
   { key: "apr", label: "Apr", amount: 14_561 },
   { key: "may", label: "May", amount: 5_125 },
@@ -33,6 +42,17 @@ export const SPEND_TRENDS: SpendMonth[] = [
   { key: "jul", label: "Jul", amount: 19_450 },
   { key: "recent", label: "Recent", amount: 10_032 },
 ];
+
+/**
+ * How many trailing months the `AVG` marker and the headline cover.
+ *
+ * Six, not "all of them": the average is a rolling half-year, which is what
+ * makes it a fair yardstick for the month in progress. It also means the
+ * chart can carry as much scrollable history as we like without the headline
+ * drifting — those six sum to ₹72,000, so the average stays ₹12k and the gap
+ * to the current month stays 16.4%, exactly as the design states.
+ */
+export const SPEND_AVG_WINDOW = 6;
 
 /** Day of the month "today" falls on — the daily view and the agent's
     month-against-month comparison both cut their series here. */
