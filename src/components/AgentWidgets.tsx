@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS } from "../data";
+import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS, JUL_DAILY } from "../data";
 import { rupees, sum } from "../lib/format";
 import Money from "../lib/mask";
 
@@ -51,33 +51,42 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
       </div>
 
       <div className="flex flex-col gap-[16px]">
-        {/* The bar is the same money twice: the faded band is this month's
-            figure, the solid band what would survive the cut. The boundary is
-            the slider's thumb position, so dragging visibly eats the bar. */}
-        <div className="relative h-[14px] w-full overflow-hidden rounded-[2px]">
-          <div
-            className="absolute inset-0 opacity-25"
-            style={{ background: `var(${cat.token})` }}
-          />
+        {/* The bar IS the slider. The faded run growing from the left is the
+            cut, the solid remainder is what survives, and the handle stands
+            on the boundary — dragging visibly eats the category. A separate
+            track underneath put the control a row away from the thing it
+            controls. The native input is stretched invisibly across the
+            whole band, so keyboard and screen-reader behaviour stay stock. */}
+        <div className="relative flex h-[24px] w-full items-center">
+          <div className="relative h-[14px] w-full overflow-hidden rounded-[2px]">
+            {/* Faded base = the whole category; the solid band anchored right
+                is what survives. What the handle has passed reads as gone. */}
+            <div className="absolute inset-0 opacity-25" style={{ background: `var(${cat.token})` }} />
+            <motion.div
+              className="absolute inset-y-0 right-0"
+              style={{ background: `var(${cat.token})` }}
+              initial={false}
+              animate={{ width: `${100 - pct}%` }}
+              transition={{ duration: 0.15, ease: EASE }}
+            />
+          </div>
           <motion.div
-            className="absolute inset-y-0 left-0 rounded-[2px]"
-            style={{ background: `var(${cat.token})` }}
+            className="pointer-events-none absolute h-[24px] w-[14px] -translate-x-1/2 rounded-[7px] border border-black bg-white shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
             initial={false}
-            animate={{ width: `${100 - pct}%` }}
-            transition={{ duration: 0.18, ease: EASE }}
+            animate={{ left: `${pct}%` }}
+            transition={{ duration: 0.15, ease: EASE }}
+          />
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={pct}
+            onChange={(e) => setPct(Number(e.target.value))}
+            aria-label={`Cut ${cat.label} by ${pct} percent`}
+            className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0"
           />
         </div>
-
-        <input
-          type="range"
-          min={0}
-          max={100}
-          step={5}
-          value={pct}
-          onChange={(e) => setPct(Number(e.target.value))}
-          aria-label={`Cut ${cat.label} by ${pct} percent`}
-          className="w-full accent-black"
-        />
 
         <div className="flex flex-col gap-[12px]">
           <Row label={`${cat.label} now`} value={cat.amount} token={cat.token} />
@@ -160,32 +169,52 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   return d;
 }
 
+/** The months the line card can draw. Sep is the running month — solid, in
+    front, ending in a dot at today; the finished months are dashed context.
+    Order here is z-order back-to-front and legend order left-to-right. */
+const LINE_MONTHS = [
+  { key: "jul", label: "Jul", daily: JUL_DAILY, colour: "var(--color-gain)", solid: false },
+  { key: "aug", label: "Aug", daily: AUG_DAILY, colour: "var(--color-series-prior)", solid: false },
+  { key: "sep", label: "Sep", daily: DAILY_SPEND, colour: "var(--color-series-current)", solid: true },
+] as const;
+
+type LineMonthKey = (typeof LINE_MONTHS)[number]["key"];
+
 /**
- * Spent-this-month, Sep's running total against Aug's (Figma 1500:199455).
- * Sep is solid and ends in a dot at today; Aug is dashed and runs the full
- * month. The legend chips are toggles — tap one to drop that line out and
- * read the other alone.
+ * Spent-this-month, the running total of each month laid over the others
+ * (Figma 1500:199455). Sep is solid and ends in a dot at today; the finished
+ * months are dashed. The legend chips are a filter — any combination of
+ * months, so "is this month unusual?" can be answered against more than one
+ * baseline. The last month standing can't be toggled off: an empty chart
+ * answers nothing.
  */
 export function MonthLineCard() {
-  const [show, setShow] = useState({ sep: true, aug: true });
+  const [show, setShow] = useState<Record<LineMonthKey, boolean>>({
+    jul: false,
+    aug: true,
+    sep: true,
+  });
 
-  const { sepPts, augPts, sepTotal } = useMemo(() => {
-    const sep = cumulative(DAILY_SPEND);
-    const aug = cumulative(AUG_DAILY);
-    const yMax = Math.max(sep[sep.length - 1], aug[aug.length - 1]) * 1.05;
-    const pt = (day: number, v: number) => ({
-      x: (day / 31) * LINE_W,
-      y: LINE_H - (v / yMax) * LINE_H,
+  const toggle = (key: LineMonthKey) =>
+    setShow((s) => {
+      const next = { ...s, [key]: !s[key] };
+      return Object.values(next).some(Boolean) ? next : s;
     });
-    return {
-      sepPts: sep.map((v, day) => pt(day, v)),
-      augPts: aug.map((v, day) => pt(day, v)),
-      sepTotal: sep[sep.length - 1],
-    };
+
+  const months = useMemo(() => {
+    const series = LINE_MONTHS.map((m) => ({ ...m, cum: cumulative([...m.daily]) }));
+    const yMax = Math.max(...series.map((m) => m.cum[m.cum.length - 1])) * 1.05;
+    return series.map((m) => ({
+      ...m,
+      pts: m.cum.map((v, day) => ({
+        x: (day / 31) * LINE_W,
+        y: LINE_H - (v / yMax) * LINE_H,
+      })),
+      total: m.cum[m.cum.length - 1],
+    }));
   }, []);
 
-  const sepEnd = sepPts[sepPts.length - 1];
-  const augEnd = augPts[augPts.length - 1];
+  const sepTotal = months.find((m) => m.key === "sep")!.total;
 
   return (
     <div className="w-full overflow-hidden rounded-[12px] border border-hair bg-white p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
@@ -206,45 +235,37 @@ export function MonthLineCard() {
           viewBox={`-4 -6 ${LINE_W + 8} ${LINE_H + 12}`}
           className="h-auto w-full"
           role="img"
-          aria-label={`${rupees(sepTotal)} spent so far in Sep, against Aug's full month`}
+          aria-label={`${rupees(sepTotal)} spent so far in Sep, against earlier months`}
         >
-          <motion.path
-            d={smoothPath(augPts)}
-            fill="none"
-            stroke="var(--color-series-prior)"
-            strokeWidth="1.5"
-            strokeDasharray="4 4"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1, opacity: show.aug ? 1 : 0.12 }}
-            transition={{ pathLength: { duration: 0.9, ease: EASE }, opacity: { duration: 0.25 } }}
-          />
-          <motion.circle
-            cx={augEnd.x}
-            cy={augEnd.y}
-            r="4"
-            fill="var(--color-series-prior)"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: show.aug ? 1 : 0.12 }}
-            transition={{ duration: 0.25, delay: 0.5 }}
-          />
-          <motion.path
-            d={smoothPath(sepPts)}
-            fill="none"
-            stroke="var(--color-series-current)"
-            strokeWidth="2"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1, opacity: show.sep ? 1 : 0.12 }}
-            transition={{ pathLength: { duration: 0.9, ease: EASE }, opacity: { duration: 0.25 } }}
-          />
-          <motion.circle
-            cx={sepEnd.x}
-            cy={sepEnd.y}
-            r="4.5"
-            fill="var(--color-series-current)"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: show.sep ? 1 : 0.12 }}
-            transition={{ duration: 0.25, delay: 0.5 }}
-          />
+          {months.map((m) => {
+            const end = m.pts[m.pts.length - 1];
+            return (
+              <g key={m.key}>
+                <motion.path
+                  d={smoothPath(m.pts)}
+                  fill="none"
+                  stroke={m.colour}
+                  strokeWidth={m.solid ? 2 : 1.5}
+                  strokeDasharray={m.solid ? undefined : "4 4"}
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1, opacity: show[m.key] ? 1 : 0 }}
+                  transition={{
+                    pathLength: { duration: 0.9, ease: EASE },
+                    opacity: { duration: 0.25 },
+                  }}
+                />
+                <motion.circle
+                  cx={end.x}
+                  cy={end.y}
+                  r={m.solid ? 4.5 : 4}
+                  fill={m.colour}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: show[m.key] ? 1 : 0 }}
+                  transition={{ duration: 0.25, delay: 0.5 }}
+                />
+              </g>
+            );
+          })}
         </svg>
 
         {/* Day-of-month ticks, weekly. */}
@@ -260,26 +281,28 @@ export function MonthLineCard() {
           ))}
         </div>
 
-        <div className="flex items-center gap-[16px]">
-          <LegendChip
-            label="Sep"
-            on={show.sep}
-            colour="var(--color-series-current)"
-            solid
-            onToggle={() => setShow((s) => ({ ...s, sep: !s.sep }))}
-          />
-          <LegendChip
-            label="Aug"
-            on={show.aug}
-            colour="var(--color-series-prior)"
-            onToggle={() => setShow((s) => ({ ...s, aug: !s.aug }))}
-          />
+        <div className="flex items-center gap-[8px]">
+          {[...LINE_MONTHS].reverse().map((m) => (
+            <LegendChip
+              key={m.key}
+              label={m.label}
+              on={show[m.key]}
+              colour={m.colour}
+              solid={m.solid}
+              onToggle={() => toggle(m.key)}
+            />
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
+/**
+ * A filter pill, in the same vocabulary as the app's range pills: on = a
+ * white pill with a hairline, off = bare grey text. The dot keeps carrying
+ * the series colour, so you can still tell which line is which month.
+ */
 function LegendChip({
   label,
   on,
@@ -298,15 +321,17 @@ function LegendChip({
       type="button"
       aria-pressed={on}
       onClick={onToggle}
-      className={`flex items-center gap-[6px] font-mono text-[12px] font-medium uppercase leading-[1.4] transition-opacity duration-150 ${on ? "" : "opacity-40"}`}
+      className={[
+        "flex items-center gap-[6px] rounded-[50px] px-[12px] py-[6px] font-mono text-[12px] font-medium uppercase leading-[1.4]",
+        "transition-colors duration-150 active:scale-95",
+        on ? "border border-hair-pill bg-white text-black" : "border border-transparent text-ink-dim",
+      ].join(" ")}
     >
       <span
         className="block size-[8px] rounded-full"
         style={solid ? { background: colour } : { border: `1.5px dashed ${colour}` }}
       />
-      <span style={{ color: on ? (solid ? colour : "var(--color-ink)") : "var(--color-ink-dim)" }}>
-        {label}
-      </span>
+      {label}
     </button>
   );
 }

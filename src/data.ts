@@ -53,12 +53,18 @@ export const DAILY_SPEND: number[] = [
 ];
 
 /**
- * August, day by day, complete. Sums to the ₹6,780 the habits card reports
- * for Aug, for the same reason as above.
+ * August and July, day by day, complete. Each sums to what the habits card
+ * reports for its month (₹6,780 and ₹5,650), for the same reason as above —
+ * the agent's month lines and the donut must be readings of one series.
  */
 export const AUG_DAILY: number[] = [
   230, 0, 180, 320, 0, 140, 260, 340, 0, 620, 180, 0, 240, 710, 120, 0, 380, 290, 0, 160, 640, 0,
   210, 330, 150, 0, 290, 560, 0, 240, 190,
+];
+
+export const JUL_DAILY: number[] = [
+  150, 0, 220, 180, 0, 310, 90, 0, 240, 650, 130, 0, 260, 0, 630, 210, 0, 290, 160, 0, 590, 120,
+  0, 270, 190, 0, 310, 230, 0, 180, 240,
 ];
 
 export type MonthFlow = {

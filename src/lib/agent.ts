@@ -162,7 +162,7 @@ export function answerFor(question: string): Answer {
     return {
       body: `You've spent ${rupees(sepSoFar)} so far this month — ${rupees(diff)} ${
         diff >= 0 ? "more" : "less"
-      } than by this point in Aug.\n\nDay by day. Tap a month in the legend to read one alone:`,
+      } than by this point in Aug.\n\nDay by day. The legend is a filter — bring Jul in for a second baseline:`,
       widget: { kind: "monthline" },
       followUps: ["Where did my money go?", "What's driving my net worth?"],
     };
