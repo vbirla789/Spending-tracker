@@ -57,9 +57,9 @@ export default function HabitsCard() {
       {/* Header band and full-width rule, matching the cash flow card — the
           rule is the edge of the header, so it runs the card's full width
           rather than being inset with the content. */}
-      <div className="flex w-full flex-col px-[16px] py-[12px]">
+      <div className="flex w-full flex-col bg-tip px-[16px] py-[12px]">
         <div className="flex w-full items-center justify-between">
-            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-black">
               Habits
             </p>
 
@@ -162,7 +162,7 @@ export default function HabitsCard() {
           <ul className="flex w-full flex-col gap-[12px]">
             {month.categories.map((cat, i) => (
               <li key={cat.key} className="flex w-full flex-col gap-[12px]">
-                {i > 0 && <div className="h-px w-full bg-hair" />}
+                {i > 0 && <div className="h-px w-full card-dash" />}
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-[8px]">
                     <div

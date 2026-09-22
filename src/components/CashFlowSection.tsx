@@ -56,10 +56,10 @@ export default function CashFlowSection() {
       {/* The title owns its own padded band and the rule runs the full width
           of the card beneath it — an inset rule would read as a divider
           inside the content rather than as the edge of a header. */}
-      <div className="flex w-full flex-col px-[16px] py-[12px]">
+      <div className="flex w-full flex-col bg-tip px-[16px] py-[12px]">
         <p
           id="cf-label"
-          className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim"
+          className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-black"
         >
           Cash flow
         </p>
@@ -136,7 +136,7 @@ export default function CashFlowSection() {
                 can roll it, rather than gluing a sign onto a positive. */}
             <Row swatch="bg-expense" label="Outgoing" value={-active.expenses} />
           </div>
-          <div className="h-px w-full bg-hair" />
+          <div className="h-px w-full card-dash" />
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-[8px]">
               {/* The net row gets a swatch of its own now — without one it

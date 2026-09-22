@@ -157,6 +157,17 @@ button {
    what actually separates these from the dot paper — a single soft shadow left
    them looking printed onto it. Applied as a filter so it wraps the pointer
    triangle too, which a box-shadow would square off. */
+/* Dividers between rows inside a card. Dashed 4-4 in the hairline colour,
+   per the file — a gradient rather than a border so it stays exactly 1px
+   and the dash pattern can't be rounded to fit the element's width. */
+.card-dash {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-hair) 0 4px,
+    transparent 4px 8px
+  );
+}
+
 .tip-shadow {
   filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.25)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
 }

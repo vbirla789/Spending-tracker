@@ -48,8 +48,10 @@ export function AnswerCard({
 }) {
   return (
     <div className="w-full overflow-hidden border border-hair bg-white shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
-      <div className="flex w-full items-center justify-between px-[16px] py-[12px]">
-        <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+      {/* The header band is tinted and its title is black — it reads as a
+          label on the card rather than a caption inside it. */}
+      <div className="flex w-full items-center justify-between bg-tip px-[16px] py-[12px]">
+        <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-black">
           {title}
         </p>
         {trailing}
@@ -64,9 +66,13 @@ export function AnswerCard({
  * A rule inside a padded card body that still reaches both card borders.
  * Negative margins undo the 16px padding rather than the body losing it, so
  * only the rules break out and the rows stay aligned.
+ *
+ * Dashed, unlike the solid rule under a card's header: that one is an edge,
+ * these separate rows of the same list, and the lighter texture keeps them
+ * from reading as another boundary.
  */
 export function CardRule() {
-  return <div className="-mx-[16px] h-px w-[calc(100%+32px)] bg-hair" />;
+  return <div className="-mx-[16px] h-px w-[calc(100%+32px)] card-dash" />;
 }
 
 /* ================================================================== */
