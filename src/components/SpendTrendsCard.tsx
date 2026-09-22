@@ -42,6 +42,10 @@ const D_PAST = 10;
     to the top gridline, and the four y labels sit on a 52px pitch. */
 const D_SCALE_H = 156;
 const D_CEILING = 2_400;
+/** How far the beak's tip sits into its 34px box — the apex of the exported
+    triangle. The callout is offset by this so its tip, rather than its
+    corner, is what lands on the marker. */
+const D_BEAK_TIP = 17;
 
 /**
  * Both bodies stand exactly this tall.
@@ -491,19 +495,6 @@ function DailyBody() {
 
   const barH = (amount: number) => (amount / D_CEILING) * D_SCALE_H;
 
-  /* Pill collision. The date pill runs ~56px wide and TODAY ~49px; when the
-     scrub brings the two spans into contact, TODAY fades rather than letting
-     the cards shingle. Widths are the rendered sizes, not measured — both
-     labels are fixed-length uppercase mono, so they can't drift. */
-  const DATE_PILL_W = 56;
-  const TODAY_PILL_W = 49;
-  const todayX = todayIdx * D_PITCH;
-  const datePillLeft = Math.min(selX, D_PLOT_W - DATE_PILL_W);
-  const pillsCollide =
-    selIdx !== todayIdx &&
-    datePillLeft < todayX + TODAY_PILL_W &&
-    datePillLeft + DATE_PILL_W > todayX;
-
   /* Even thirds of the ceiling. The file's own middle labels (₹1.8/₹1.2 on
      an even pitch) aren't linear against its bars, and the numbers win —
      see the README table. */
@@ -513,12 +504,20 @@ function DailyBody() {
     <div className="relative flex w-full flex-col" style={{ paddingTop: D_TOP_GAP }}>
       {/* Callout — SPENT ON / date / figure — pointing down at the selected
           column from above the plot, the file's flat 2px drop shadow and all.
-          Left edge rides the column (the file parks it flush), clamped so it
-          never leaves the plot. */}
+          Positioned by its BEAK, not its left edge: the beak's tip sits
+          D_BEAK_TIP into its box and the box is flush left on the card, so
+          the card starts that far left of the marker and the tip lands
+          exactly on it. Anchoring the card instead left the beak 16px off to
+          the side, and the callout read as floating near the line rather
+          than attached to it. The +0.5 is the marker's own half-width — it's
+          a 1px rule drawn at selX, so its centre is half a pixel over.
+
+          No clamping: the last selectable column is today, at D_PAST of
+          D_COLS, which leaves the card's full width inside the plot. */}
       <motion.div
         className="tip-shadow absolute top-[24px] z-10 flex flex-col items-start"
         initial={false}
-        animate={{ left: Math.min(Math.max(selX - 1, 0), D_PLOT_W - 120) }}
+        animate={{ left: selX + 0.5 - D_BEAK_TIP }}
         transition={{ duration: 0.22, ease: EASE }}
       >
         {/* The date joins the label on one line and the figure sits under it,
@@ -614,37 +613,15 @@ function DailyBody() {
             />
           </div>
 
-          {/* The two pills under the axis: the selected date (follows the
-              scrub) and TODAY (fixed). When the scrub is on today they'd say
-              the same thing twice, so the date pill yields — and when it
-              merely gets close, TODAY fades out instead of colliding: the
-              selection is what you're pointing at, TODAY is only a landmark. */}
+          {/* Only TODAY sits under the axis. The selected date used to get a
+              pill here too, but the callout above already names it — two
+              copies of the same date, one at each end of the marker, made the
+              reading ambiguous about which end was the answer. The callout
+              carries date and figure together; this is just the landmark. */}
           <div className="relative mt-[3px] h-[36px]">
-            {selIdx !== todayIdx && (
-              <motion.div
-                className="tip-shadow absolute top-0 flex flex-col items-start"
-                initial={false}
-                animate={{ left: datePillLeft }}
-                transition={{ duration: 0.22, ease: EASE }}
-              >
-                <img
-                  src="/icons/pointer-wide.svg"
-                  alt=""
-                  className="-mb-[3px] block h-[8px] w-[34px] -scale-y-100"
-                />
-                <div className="rounded-[6px] bg-tip p-[8px]">
-                  <p className="whitespace-nowrap font-mono text-[11px] font-medium uppercase leading-[1.4] text-black">
-                    {sel.day} Sep
-                  </p>
-                </div>
-              </motion.div>
-            )}
-            <motion.div
+            <div
               className="tip-shadow absolute top-0 flex flex-col items-start"
               style={{ left: todayIdx * D_PITCH }}
-              initial={false}
-              animate={{ opacity: pillsCollide ? 0 : 1 }}
-              transition={{ duration: 0.18 }}
             >
               <img
                 src="/icons/pointer-wide.svg"
@@ -656,7 +633,7 @@ function DailyBody() {
                   Today
                 </p>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
 
