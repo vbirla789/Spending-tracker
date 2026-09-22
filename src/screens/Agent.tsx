@@ -1,12 +1,25 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AnswerCard, CardRule, FlowBar, MonthLineCard, WhatIfCard } from "../components/AgentWidgets";
+import {
+  AnswerCard,
+  CardRule,
+  CategoryRing,
+  CategoryTrend,
+  FlowBar,
+  MonthLineCard,
+  SavingsProjection,
+  WhatIfCard,
+} from "../components/AgentWidgets";
 import ChatInput from "../components/ChatInput";
 import HomeBar from "../components/HomeBar";
 import Sphere3D from "../components/Sphere3D";
 import StatusBar from "../components/StatusBar";
 import { answerFor, SUGGESTIONS, type Answer, type AnswerRow } from "../lib/agent";
 import { rupees, signedRupees } from "../lib/format";
+
+/** Whose money this is. One constant, so the greeting and anything else
+    that addresses the reader can't drift apart. */
+const USER_NAME = "Vishal";
 
 /** `answer: null` means the agent is still working on this turn. */
 type Turn = { id: number; question: string; answer: Answer | null };
@@ -86,35 +99,39 @@ export default function Agent({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-[20px]">
-        {/* 8px around the 40px back button, so the row is 56px — no fixed
-            height, the button sets it. Flush against the status bar read as
-            cramped; the padding buys the title air without pushing the thread
-            down, since the 20px below it is unchanged. */}
-        <header className="flex shrink-0 items-center gap-[12px] py-[8px]">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Back"
-            className="flex size-[40px] shrink-0 items-center justify-center transition-transform duration-150 active:scale-90"
-          >
-            <img src="/icons/chevron-right.svg" alt="" className="size-[20px] rotate-180" />
-          </button>
-          {/* The live question becomes the title once there's a thread, so the
-              header doubles as "what am I looking at". */}
-          {!empty && (
-            <p className="truncate font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
-              {turns[0].question}
-            </p>
-          )}
+        {/* Figma 1581:135189. A 20px chevron in 4px of padding, the title
+            beside it, and a rule under the pair — 16px below the status bar,
+            12px between row and rule. The rule is the thing that changed:
+            the header used to end in air, so a card scrolling up to meet it
+            had nothing to stop against. */}
+        <header className="flex shrink-0 flex-col gap-[12px] pt-[16px]">
+          <div className="flex items-center gap-[12px]">
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Back"
+              className="flex shrink-0 items-center p-[4px] transition-transform duration-150 active:scale-90"
+            >
+              <img src="/icons/chevron-back-bold.svg" alt="" className="size-[20px] rotate-180" />
+            </button>
+            {/* The live question becomes the title once there's a thread, so
+                the header doubles as "what am I looking at". */}
+            {!empty && (
+              <p className="truncate font-mono text-[16px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+                {turns[0].question}
+              </p>
+            )}
+          </div>
+          {/* Full-bleed: the file draws it 379px wide on a 375 screen, i.e.
+              deliberately past both edges rather than inset with the text. */}
+          <div className="-mx-[20px] h-px w-[calc(100%+40px)] bg-hair-pill" />
         </header>
 
         {empty ? (
           <EmptyState onPick={ask} draft={draft} setDraft={setDraft} onSubmit={() => ask(draft)} />
         ) : (
           <>
-            {/* The 20px above the thread is the same 20px as the gutter
-                beside it, so the first reply sits in an even margin rather
-                than in a band of its own.
+            {/* 24px under the rule, per the file.
 
                 overflow-x-hidden is not cosmetic: `overflow-y: auto` makes
                 the x axis auto too, so any child a pixel too wide turns the
@@ -122,7 +139,7 @@ export default function Agent({
                 against the left edge. */}
             <div
               ref={thread}
-              className="phone-scroll mt-[20px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+              className="phone-scroll mt-[24px] min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
             >
               {/* 36px between turns against 24px inside one, so a question
                   reads as attached to its own answer and the break falls
@@ -143,6 +160,10 @@ export default function Agent({
                            down the thread and make the scroll feel like a
                            menu rather than a conversation. */
                         showFollowUps={i === turns.length - 1 && !thinking}
+                        /* And only the first one greets you — a hello on
+                           every answer would read as the agent forgetting
+                           it had already met you. */
+                        greet={i === 0}
                       />
                     ) : (
                       <Thinking />
@@ -351,10 +372,14 @@ function AgentReply({
   answer,
   onAsk,
   showFollowUps,
+  greet = false,
 }: {
   answer: Answer;
   onAsk: (q: string) => void;
   showFollowUps: boolean;
+  /** First reply of the thread — it opens with the greeting (Figma
+      1581:135205). Later replies don't, so it reads as one conversation. */
+  greet?: boolean;
 }) {
   return (
     <motion.div
@@ -366,14 +391,24 @@ function AgentReply({
       <Avatar />
 
       <div className="flex min-w-0 flex-1 flex-col gap-[16px]">
-        <p className="whitespace-pre-wrap font-mono text-[14px] font-medium leading-[1.4] tracking-[0.6px] text-black">
-          {answer.body}
-        </p>
+        <div className="flex flex-col gap-[12px]">
+          {greet && (
+            <p className="font-mono text-[14px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+              Hey {USER_NAME}
+            </p>
+          )}
+          <p className="whitespace-pre-wrap font-mono text-[14px] font-medium leading-[1.4] tracking-[0.6px] text-black">
+            {answer.body}
+          </p>
+        </div>
 
-        {/* Interactive bodies. whatif and monthline stand in for a card;
-            flowbar renders inside one, below. */}
+        {/* Interactive bodies. All of these stand in for a card; flowbar is
+            the exception and renders inside one, below. */}
         {answer.widget?.kind === "whatif" && <WhatIfCard catKey={answer.widget.catKey} />}
         {answer.widget?.kind === "monthline" && <MonthLineCard />}
+        {answer.widget?.kind === "ring" && <CategoryRing onAsk={onAsk} />}
+        {answer.widget?.kind === "trend" && <CategoryTrend catKey={answer.widget.catKey} />}
+        {answer.widget?.kind === "projection" && <SavingsProjection />}
 
         {answer.card && (
           <AnswerCard title={answer.card.title}>
