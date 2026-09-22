@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { FlowBar, MonthLineCard, WhatIfCard } from "../components/AgentWidgets";
+import { AnswerCard, CardRule, FlowBar, MonthLineCard, WhatIfCard } from "../components/AgentWidgets";
 import ChatInput from "../components/ChatInput";
 import HomeBar from "../components/HomeBar";
 import Sphere3D from "../components/Sphere3D";
@@ -376,14 +376,7 @@ function AgentReply({
         {answer.widget?.kind === "monthline" && <MonthLineCard />}
 
         {answer.card && (
-          <div className="w-full overflow-hidden rounded-[12px] border border-hair bg-white p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
-            <div className="mb-[16px] flex flex-col gap-[12px]">
-              <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
-                {answer.card.title}
-              </p>
-              <div className="h-px w-full bg-hair" />
-            </div>
-
+          <AnswerCard title={answer.card.title}>
             {/* The strip translation of the rows below it: in, out, kept. */}
             {answer.widget?.kind === "flowbar" && <FlowBar />}
 
@@ -393,7 +386,7 @@ function AgentReply({
                   <Row key={row.label} row={row} onAsk={onAsk} />
                 ))}
               </div>
-              <div className="h-px w-full bg-hair" />
+              <CardRule />
               <div className="flex w-full items-center justify-between">
                 <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
                   {answer.card.total.label}
@@ -405,7 +398,7 @@ function AgentReply({
                 </p>
               </div>
             </div>
-          </div>
+          </AnswerCard>
         )}
 
         {/* A nowrap rail, not a wrapping row: a long suggestion wrapping to

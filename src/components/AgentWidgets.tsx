@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS, JUL_DAILY } from "../data";
 import { rupees, sum } from "../lib/format";
 import Money from "../lib/mask";
@@ -22,6 +22,50 @@ export type AgentWidget =
 const EASE = [0.23, 1, 0.32, 1] as [number, number, number, number];
 
 /* ================================================================== */
+/* The card shell every answer body shares                             */
+
+/**
+ * Square corners, and a titled band whose rule runs the card's full width.
+ *
+ * The rule is the edge of the header, so it has to reach both borders — held
+ * inside the body's padding it read as a divider between two rows of content
+ * instead. Same structure as the cash flow and habits cards on the Overview,
+ * so an answer looks like the screen it was derived from.
+ */
+export function AnswerCard({
+  title,
+  trailing,
+  children,
+}: {
+  title: string;
+  /** Sits opposite the title in the header band — a readout or a control. */
+  trailing?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="w-full overflow-hidden border border-hair bg-white shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
+      <div className="flex w-full items-center justify-between px-[16px] py-[12px]">
+        <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+          {title}
+        </p>
+        {trailing}
+      </div>
+      <div className="h-px w-full bg-hair" />
+      <div className="p-[16px]">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * A rule inside a padded card body that still reaches both card borders.
+ * Negative margins undo the 16px padding rather than the body losing it, so
+ * only the rules break out and the rows stay aligned.
+ */
+export function CardRule() {
+  return <div className="-mx-[16px] h-px w-[calc(100%+32px)] bg-hair" />;
+}
+
+/* ================================================================== */
 /* What-if — a cut you can drag                                        */
 
 /**
@@ -37,19 +81,14 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
   const after = cat.amount - cut;
 
   return (
-    <div className="w-full overflow-hidden rounded-[12px] border border-hair bg-white p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
-      <div className="mb-[16px] flex flex-col gap-[12px]">
-        <div className="flex w-full items-center justify-between">
-          <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
-            If you cut {cat.label}
-          </p>
-          <p className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black">
-            {pct}%
-          </p>
-        </div>
-        <div className="h-px w-full bg-hair" />
-      </div>
-
+    <AnswerCard
+      title={`If you cut ${cat.label}`}
+      trailing={
+        <p className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black">
+          {pct}%
+        </p>
+      }
+    >
       <div className="flex flex-col gap-[16px]">
         {/* The bar IS the slider. The faded run growing from the left is the
             cut, the solid remainder is what survives, and the handle stands
@@ -70,8 +109,12 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
               transition={{ duration: 0.15, ease: EASE }}
             />
           </div>
+          {/* Shadow only, no outline. A black hairline round a 14px handle
+              read as a drawn object sitting on the bar; the shadow alone lets
+              it float over it. Two layers, since one soft shadow on white
+              over a mid-tone fill disappears into the fill. */}
           <motion.div
-            className="pointer-events-none absolute h-[24px] w-[14px] -translate-x-1/2 rounded-[7px] border border-black bg-white shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
+            className="pointer-events-none absolute h-[24px] w-[14px] -translate-x-1/2 rounded-[7px] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.22),0_0_1px_rgba(0,0,0,0.18)]"
             initial={false}
             animate={{ left: `${pct}%` }}
             transition={{ duration: 0.15, ease: EASE }}
@@ -91,7 +134,7 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
         <div className="flex flex-col gap-[12px]">
           <Row label={`${cat.label} now`} value={cat.amount} token={cat.token} />
           <Row label="After the cut" value={after} token={cat.token} />
-          <div className="h-px w-full bg-hair" />
+          <CardRule />
           <div className="flex w-full items-center justify-between">
             <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
               Freed each month
@@ -114,7 +157,7 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
           </div>
         </div>
       </div>
-    </div>
+    </AnswerCard>
   );
 }
 
@@ -142,6 +185,19 @@ function Row({ label, value, token }: { label: string; value: number; token?: st
 
 const LINE_W = 280;
 const LINE_H = 110;
+/* The viewBox is padded so the end dots aren't half-clipped at the edges.
+   The y-axis labels have to undo that padding to sit on their own
+   gridlines — see tickTop. */
+const LINE_VB_Y = -6;
+const LINE_VB_H = LINE_H + 12;
+/** Axis step. A round ₹2k grid rather than a fraction of the tallest month —
+    a scale exists to be read off, so its numbers have to be round. */
+const LINE_STEP = 2_000;
+const LINE_AXIS_W = 29;
+
+/** Where a value's gridline lands as a percentage of the rendered SVG box. */
+const tickTop = (value: number, yMax: number) =>
+  ((LINE_H * (1 - value / yMax) - LINE_VB_Y) / LINE_VB_H) * 100;
 
 /** Cumulative sum, prefixed with a zero so every line starts on the floor. */
 function cumulative(values: number[]): number[] {
@@ -201,42 +257,60 @@ export function MonthLineCard() {
       return Object.values(next).some(Boolean) ? next : s;
     });
 
-  const months = useMemo(() => {
+  const { months, yMax, ticks } = useMemo(() => {
     const series = LINE_MONTHS.map((m) => ({ ...m, cum: cumulative([...m.daily]) }));
-    const yMax = Math.max(...series.map((m) => m.cum[m.cum.length - 1])) * 1.05;
-    return series.map((m) => ({
-      ...m,
-      pts: m.cum.map((v, day) => ({
-        x: (day / 31) * LINE_W,
-        y: LINE_H - (v / yMax) * LINE_H,
+    const tallest = Math.max(...series.map((m) => m.cum[m.cum.length - 1]));
+    /* Round the ceiling up to the next whole step so every gridline is a
+       round rupee figure and the tallest month still clears the top. */
+    const max = Math.ceil(tallest / LINE_STEP) * LINE_STEP;
+    return {
+      yMax: max,
+      ticks: Array.from({ length: max / LINE_STEP + 1 }, (_, i) => max - i * LINE_STEP),
+      months: series.map((m) => ({
+        ...m,
+        pts: m.cum.map((v, day) => ({
+          x: (day / 31) * LINE_W,
+          y: LINE_H - (v / max) * LINE_H,
+        })),
+        total: m.cum[m.cum.length - 1],
       })),
-      total: m.cum[m.cum.length - 1],
-    }));
+    };
   }, []);
 
   const sepTotal = months.find((m) => m.key === "sep")!.total;
 
   return (
-    <div className="w-full overflow-hidden rounded-[12px] border border-hair bg-white p-[16px] shadow-[0_1px_4px_0_rgba(0,0,0,0.04)]">
-      <div className="mb-[16px] flex flex-col gap-[12px]">
-        <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
-          Spent this month
-        </p>
-        <div className="h-px w-full bg-hair" />
-      </div>
-
+    <AnswerCard title="Spent this month">
       <div className="flex flex-col gap-[12px]">
         <Money
           value={sepTotal}
           className="tnum font-serif text-[24px] font-semibold leading-[1.3] text-black"
         />
 
+        {/* Chart and scale in one row, and that row holds ONLY the plot: the
+            label tops are percentages of the SVG's own box, so anything else
+            sharing the row's height would throw them off. */}
+        <div className="flex items-stretch gap-[12px]">
         <svg
-          viewBox={`-4 -6 ${LINE_W + 8} ${LINE_H + 12}`}
-          className="h-auto w-full"
+          viewBox={`-4 ${LINE_VB_Y} ${LINE_W + 8} ${LINE_VB_H}`}
+          className="h-auto min-w-0 flex-1"
           role="img"
           aria-label={`${rupees(sepTotal)} spent so far in Sep, against earlier months`}
         >
+          {/* Gridlines first, so every line draws over them. Without these
+              the labels are a legend to nothing — you'd be eyeballing
+              across empty space to read a height. */}
+          {ticks.map((t) => (
+            <line
+              key={t}
+              x1={0}
+              x2={LINE_W}
+              y1={LINE_H * (1 - t / yMax)}
+              y2={LINE_H * (1 - t / yMax)}
+              stroke="var(--color-bar)"
+              strokeDasharray="2 2"
+            />
+          ))}
           {months.map((m) => {
             const end = m.pts[m.pts.length - 1];
             return (
@@ -268,8 +342,32 @@ export function MonthLineCard() {
           })}
         </svg>
 
-        {/* Day-of-month ticks, weekly. */}
-        <div className="relative h-[17px] w-full">
+          {/* The rupee scale. Percentage tops rather than a fixed column,
+              because the SVG's height comes from its aspect ratio and isn't
+              a figure we could match. */}
+          <div
+            className="relative shrink-0"
+            style={{ width: LINE_AXIS_W }}
+            aria-hidden="true"
+          >
+            {ticks.map((t) => (
+              <p
+                key={t}
+                className="tnum absolute -translate-y-1/2 whitespace-nowrap font-serif text-[10px] font-semibold leading-[1.3] text-ink-dim"
+                style={{ top: `${tickTop(t, yMax)}%` }}
+              >
+                ₹{t === 0 ? "0" : `${t / 1000}K`}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* Day-of-month ticks, weekly. Inset on the right by the scale's
+            column so its percentages span the plot, not the whole card. */}
+        <div
+          className="relative h-[17px]"
+          style={{ marginRight: LINE_AXIS_W + 12 }}
+        >
           {[1, 8, 15, 22, 29].map((day) => (
             <p
               key={day}
@@ -280,6 +378,8 @@ export function MonthLineCard() {
             </p>
           ))}
         </div>
+
+        <CardRule />
 
         <div className="flex items-center gap-[8px]">
           {[...LINE_MONTHS].reverse().map((m) => (
@@ -294,7 +394,7 @@ export function MonthLineCard() {
           ))}
         </div>
       </div>
-    </div>
+    </AnswerCard>
   );
 }
 
