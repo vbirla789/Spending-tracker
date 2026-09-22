@@ -210,52 +210,34 @@ function cumulative(values: number[]): number[] {
   return out;
 }
 
+/** The x-axis is weekly, so the line is sampled weekly too. */
+const LINE_WEEK = 7;
+
 /**
- * A monotone cubic through the points (Fritsch–Carlson), as cubic Béziers.
+ * Every seventh day, plus wherever the month actually ends.
  *
- * Catmull-Rom was drawing a snake: it sets each tangent from the neighbours
- * either side, so a flat day between two spending days gets a slope anyway
- * and the curve bulges past its own points, over and over. Cumulative spend
- * only ever goes up, and this keeps the curve monotone — every segment is
- * clamped so it can't overshoot the values it joins. Flat stretches stay
- * flat, jumps stay crisp, and the line reads as an accumulation.
+ * Thirty-odd points across 280px is a reading a day, and no curve makes
+ * that legible — it's a zigzag whatever you fit through it. A running
+ * total doesn't need daily resolution to answer "am I ahead of last
+ * month"; it needs to be comparable at a glance. Weekly points land on the
+ * dates already labelled under the chart, so a kink in the line is always
+ * a tick you can name.
  */
-function monotonePath(pts: { x: number; y: number }[]): string {
-  const n = pts.length;
-  if (n < 2) return "";
-
-  const dx: number[] = [];
-  const slope: number[] = [];
-  for (let i = 0; i < n - 1; i++) {
-    dx[i] = pts[i + 1].x - pts[i].x;
-    slope[i] = (pts[i + 1].y - pts[i].y) / dx[i];
-  }
-
-  /* Tangents: zero wherever the data turns, so the curve can't round a
-     corner into an overshoot; the weighted harmonic mean elsewhere. */
-  const t: number[] = Array.from({ length: n });
-  t[0] = slope[0];
-  t[n - 1] = slope[n - 2];
-  for (let i = 1; i < n - 1; i++) {
-    if (slope[i - 1] * slope[i] <= 0) {
-      t[i] = 0;
-    } else {
-      const w1 = 2 * dx[i] + dx[i - 1];
-      const w2 = dx[i] + 2 * dx[i - 1];
-      t[i] = (w1 + w2) / (w1 / slope[i - 1] + w2 / slope[i]);
-    }
-  }
-
-  let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < n - 1; i++) {
-    const h = dx[i] / 3;
-    d +=
-      ` C${(pts[i].x + h).toFixed(1)},${(pts[i].y + t[i] * h).toFixed(1)}` +
-      ` ${(pts[i + 1].x - h).toFixed(1)},${(pts[i + 1].y - t[i + 1] * h).toFixed(1)}` +
-      ` ${pts[i + 1].x.toFixed(1)},${pts[i + 1].y.toFixed(1)}`;
-  }
-  return d;
+function weeklyPoints(cum: number[]): { day: number; value: number }[] {
+  const out: { day: number; value: number }[] = [];
+  for (let day = 0; day < cum.length; day += LINE_WEEK) out.push({ day, value: cum[day] });
+  const lastDay = cum.length - 1;
+  if (out[out.length - 1].day !== lastDay) out.push({ day: lastDay, value: cum[lastDay] });
+  return out;
 }
+
+/** Straight segments between the sampled points — no smoothing to overshoot. */
+function linearPath(pts: { x: number; y: number }[]): string {
+  return pts
+    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+    .join(" ");
+}
+
 
 /** The months the line card can draw. Sep is the running month — solid, in
     front, ending in a dot at today; the finished months are dashed context.
@@ -300,9 +282,9 @@ export function MonthLineCard() {
       ticks: Array.from({ length: max / LINE_STEP + 1 }, (_, i) => max - i * LINE_STEP),
       months: series.map((m) => ({
         ...m,
-        pts: m.cum.map((v, day) => ({
+        pts: weeklyPoints(m.cum).map(({ day, value }) => ({
           x: (day / 31) * LINE_W,
-          y: LINE_H - (v / max) * LINE_H,
+          y: LINE_H - (value / max) * LINE_H,
         })),
         total: m.cum[m.cum.length - 1],
       })),
@@ -312,13 +294,11 @@ export function MonthLineCard() {
   const sepTotal = months.find((m) => m.key === "sep")!.total;
 
   return (
-    <AnswerCard title="Spent this month">
+    <AnswerCard title="Compare">
+      {/* No running total on the card. The reply above it already states the
+          figure and the gap to last month; repeating it here made the card a
+          second copy of the sentence rather than the evidence for it. */}
       <div className="flex flex-col gap-[12px]">
-        <Money
-          value={sepTotal}
-          className="tnum font-serif text-[24px] font-semibold leading-[1.3] text-black"
-        />
-
         {/* Chart and scale in one row, and that row holds ONLY the plot: the
             label tops are percentages of the SVG's own box, so anything else
             sharing the row's height would throw them off. */}
@@ -348,7 +328,7 @@ export function MonthLineCard() {
             return (
               <g key={m.key}>
                 <motion.path
-                  d={monotonePath(m.pts)}
+                  d={linearPath(m.pts)}
                   fill="none"
                   stroke={m.colour}
                   strokeWidth={m.solid ? 2 : 1.5}
@@ -534,7 +514,6 @@ export function CategoryRing({ onAsk }: { onAsk: (q: string) => void }) {
   const biggest = [...month.categories].sort((a, b) => b.amount - a.amount)[0];
   const [selKey, setSelKey] = useState(biggest.key);
   const sel = month.categories.find((c) => c.key === selKey) ?? biggest;
-  const share = Math.round((sel.amount / total) * 100);
 
   return (
     <AnswerCard title={`${month.label} breakdown`}>
@@ -565,15 +544,17 @@ export function CategoryRing({ onAsk }: { onAsk: (q: string) => void }) {
             </g>
           </svg>
 
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[2px]">
-            <p className="tnum font-serif text-[22px] font-semibold leading-[1.3] text-black">
-              {rupees(sel.amount)}
+          {/* The total holds the centre, as it does on the habits card. It
+              used to show the selected category — which the legend row right
+              below was already saying, so the same name and figure appeared
+              twice on one card. The centre is the anchor every slice is a
+              share of; the legend is where you read the parts. */}
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-[4px]">
+            <p className="tnum font-serif text-[24px] font-semibold leading-[1.3] text-black">
+              {rupees(total)}
             </p>
             <p className="font-mono text-[11px] font-medium uppercase leading-[1.4] text-ink-dim">
-              {sel.label}
-            </p>
-            <p className="tnum font-mono text-[11px] font-medium leading-[1.4] text-ink-dim">
-              {share}% of {rupees(total)}
+              Spent in {month.label}
             </p>
           </div>
         </div>
@@ -603,6 +584,11 @@ export function CategoryRing({ onAsk }: { onAsk: (q: string) => void }) {
                     className={`font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] transition-colors duration-200 ${on ? "text-black" : "text-ink-dim"}`}
                   >
                     {cat.label}
+                  </p>
+                  {/* The share lives beside the name, as on the habits card,
+                      so the legend says what the ring shows. */}
+                  <p className="tnum font-mono text-[12px] font-medium uppercase leading-[1.4] text-ink-dim">
+                    {Math.round((cat.amount / total) * 100)}%
                   </p>
                 </div>
                 <Money
@@ -777,12 +763,12 @@ export function SavingsProjection() {
             strokeDasharray="2 2"
           />
           <motion.path
-            d={monotonePath(pts)}
+            d={linearPath(pts)}
             fill="none"
             stroke="var(--color-income)"
             strokeWidth={2}
             initial={false}
-            animate={{ d: monotonePath(pts) }}
+            animate={{ d: linearPath(pts) }}
             transition={{ duration: 0.4, ease: EASE }}
           />
           <motion.circle
