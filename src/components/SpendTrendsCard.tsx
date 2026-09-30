@@ -238,14 +238,6 @@ function MonthlyBody({ average }: { average: number }) {
   const height = (value: number) => (value / ceiling) * M_PLOT_H;
   const plotW = (SPEND_TRENDS.length - 1) * M_PITCH + M_BAR_W;
 
-  /* The AVG rule runs the whole plot, stopping 14px short of the live bar
-     (the file's clearance). It briefly spanned only the six months it
-     averages, to state its own scope — but scrolling back then left the line
-     stranded at the right-hand edge, and a reference level you can't read a
-     bar against is no reference at all. It's a benchmark to measure every
-     month by, so it reaches every month. */
-  const avgWidth = (SPEND_TRENDS.length - 1) * M_PITCH - 14;
-
   /* Tap a month and the callout walks over to it with that month's figure —
      same idea as the daily scrubber, at month grain. Opens on the month in
      progress, which is what the file draws. */
@@ -360,14 +352,6 @@ function MonthlyBody({ average }: { average: number }) {
               );
             })}
 
-            {/* Sits at the average's own height rather than a fixed offset, so
-                the marker can't drift away from the bars it describes. Its
-                label is not in here — see the pill below. */}
-            <div
-              className="absolute left-0 border-t border-dashed border-gain"
-              style={{ bottom: height(average), width: avgWidth }}
-            />
-
             {/* Rides 8px above the selected bar's top edge and walks between
                 months on tap — it tracks a value, not a parking spot. */}
             <div
@@ -435,6 +419,18 @@ function MonthlyBody({ average }: { average: number }) {
           position the chart actually opens in. Pinned here it is legible in
           the first fold and stays legible at every scroll position; its solid
           fill breaks the rule the way the file draws it. */}
+      {/* The rule itself now lives out here with its label rather than inside
+          the scroll content, and bleeds past both page gutters: it is a level
+          to read every bar against, so it should reach the screen edges and
+          stay there. Drawn inside the scroller it was a fixed-width line that
+          slid with the months — it ran out mid-plot at one scroll position
+          and sat stranded at the edge at another. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-[-16px] border-t border-dashed border-gain"
+        style={{ top: M_TOP_GAP + M_PLOT_H - height(average) }}
+      />
+
       <div
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[23px] border border-gain bg-white px-[8px] py-[2px]"
         style={{ top: M_TOP_GAP + M_PLOT_H - height(average) }}
