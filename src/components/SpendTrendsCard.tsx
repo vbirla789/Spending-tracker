@@ -359,7 +359,7 @@ function MonthlyBody({ average }: { average: number }) {
                  framer stopped retargeting this element's `left` on update —
                  the callout always sat one selection behind. CSS transitions
                  have no opinion about the tree above them. */
-              className="pointer-events-none absolute flex -translate-x-1/2 flex-col items-center drop-shadow-[0_2px_0_rgba(0,0,0,0.25)] transition-[left,bottom] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+              className="pointer-events-none absolute z-[2] flex -translate-x-1/2 flex-col items-center drop-shadow-[0_2px_0_rgba(0,0,0,0.25)] transition-[left,bottom] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
               style={{ left: selX, bottom: height(selMonth.amount) + 8 }}
             >
               <div className="rounded-[3px] bg-white px-[8px] py-[4px]">
@@ -427,12 +427,12 @@ function MonthlyBody({ average }: { average: number }) {
           and sat stranded at the edge at another. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-[-16px] border-t border-dashed border-gain"
+        className="pointer-events-none absolute z-[1] inset-x-[-16px] border-t border-dashed border-gain"
         style={{ top: M_TOP_GAP + M_PLOT_H - height(average) }}
       />
 
       <div
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[23px] border border-gain bg-white px-[8px] py-[2px]"
+        className="pointer-events-none absolute z-[2] left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[23px] border border-gain bg-white px-[8px] py-[2px]"
         style={{ top: M_TOP_GAP + M_PLOT_H - height(average) }}
       >
         <p className="whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4] text-gain">
