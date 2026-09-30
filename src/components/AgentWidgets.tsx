@@ -88,22 +88,37 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
   const [pct, setPct] = useState(50);
 
   const cut = Math.round((cat.amount * pct) / 100);
+  const after = cat.amount - cut;
 
   return (
     <AnswerCard title={`If you cut ${cat.label}`}>
       <div className="flex flex-col gap-[16px]">
-        {/* What you're cutting from on the left, how deep on the right, sat
-            directly over the bar they describe. The two rows that used to
-            spell out "now" and "after the cut" said in four numbers what the
-            bar already shows as two lengths. */}
-        <div className="flex w-full items-baseline justify-between">
-          <Money
-            value={cat.amount}
-            className="tnum font-serif text-[20px] font-semibold leading-[1.3] text-black"
-          />
-          <p className="tnum font-serif text-[20px] font-semibold leading-[1.3] text-black">
-            {pct}%
-          </p>
+        {/* Two labelled figures, laid out to match the bar underneath: the
+            cut grows from the left, what survives sits solid on the right, so
+            the percentage lives on the left and the money it leaves you on
+            the right. Both used to be unlabelled 20px serif numbers side by
+            side — and the left one was the category total, which never moved
+            no matter where you dragged. */}
+        <div className="flex w-full items-end justify-between gap-[8px]">
+          <div className="flex min-w-0 flex-col gap-[2px]">
+            <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-ink-dim">
+              Cut by
+            </p>
+            <p className="tnum font-serif text-[20px] font-semibold leading-[1.3] text-black">
+              {pct}%
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-[2px]">
+            {/* The starting point stays on screen as the label for the figure
+                it turns into, so the pair reads "from ₹2,356 → ₹1,767". */}
+            <p className="whitespace-nowrap font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-ink-dim">
+              From {rupees(cat.amount)} to
+            </p>
+            <Money
+              value={after}
+              className="tnum font-serif text-[20px] font-semibold leading-[1.3] text-black"
+            />
+          </div>
         </div>
 
         {/* The bar IS the slider. The faded run growing from the left is the
