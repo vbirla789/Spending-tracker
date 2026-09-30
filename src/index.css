@@ -32,7 +32,8 @@
   /* Ink */
   --color-ink: #000000;
   --color-ink-dim: #a3a3a3;
-  --color-gain: #179b65; /* the below-average caret and the AVG marker */
+  --color-gain: #179b65; /* the below-average caret, the AVG marker, money kept */
+  --color-loss: #c0392f; /* money lost — the same depth as -gain, not a signal red */
 
   /* Spend trends. The bars are deliberately inert — only the month in progress
      is drawn in outline, so it reads as the subject and the history as the

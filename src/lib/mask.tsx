@@ -9,6 +9,19 @@ export function MaskProvider({ hidden, children }: { hidden: boolean; children: 
 
 export const useMasked = () => useContext(MaskContext);
 
+/**
+ * The colour a net figure should read in: kept is green, overspent is red,
+ * level or unknown is grey.
+ *
+ * Only for quantities whose sign is genuinely good or bad news. A total like
+ * "total spent" is positive without being good, so it keeps plain ink —
+ * colour here has to mean something or it means nothing.
+ */
+export function netTone(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value) || value === 0) return "text-ink-dim";
+  return value > 0 ? "text-gain" : "text-loss";
+}
+
 /** en-IN gives ₹ with Indian digit grouping (₹1,23,456) for free. */
 const LOCALE = "en-IN";
 

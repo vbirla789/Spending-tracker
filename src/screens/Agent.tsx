@@ -16,6 +16,7 @@ import Sphere3D from "../components/Sphere3D";
 import StatusBar from "../components/StatusBar";
 import { answerFor, SUGGESTIONS, type Answer, type AnswerRow } from "../lib/agent";
 import { rupees, signedRupees } from "../lib/format";
+import { netTone } from "../lib/mask";
 
 /** Whose money this is. One constant, so the greeting and anything else
     that addresses the reader can't drift apart. */
@@ -437,7 +438,13 @@ function AgentReply({
                     {answer.card.total.label}
                   </p>
                 </div>
-                <p className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black">
+                <p
+                  className={`tnum font-serif text-[14px] font-medium leading-[1.3] ${
+                    answer.card.total.tone === "net"
+                      ? netTone(answer.card.total.value)
+                      : "text-black"
+                  }`}
+                >
                   {answer.card.total.signed
                     ? signedRupees(answer.card.total.value)
                     : rupees(answer.card.total.value)}

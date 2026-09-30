@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState } from "react";
 import { CASH_FLOW } from "../data";
-import Money from "../lib/mask";
+import Money, { netTone } from "../lib/mask";
 import useDragScroll from "../lib/useDragScroll";
 
 /** Tallest bar in the design. Every bar is scaled against the same ceiling. */
@@ -147,10 +147,13 @@ export default function CashFlowSection() {
                 Net cash flow
               </p>
             </div>
+            {/* Same face, size and weight as the two rows above — this is
+                the third figure in one list, not a heading for them. The
+                sign carries the emphasis instead of the weight. */}
             <Money
               value={net}
               signed
-              className="tnum font-serif text-[14px] font-semibold leading-[1.3] text-black"
+              className={`tnum font-serif text-[14px] font-medium leading-[1.3] ${netTone(net)}`}
             />
           </div>
         </div>
