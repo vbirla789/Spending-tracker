@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useLayoutEffect, useRef, useState } from "react";
 import { CASH_FLOW } from "../data";
-import Money, { netTone } from "../lib/mask";
+import Money, { netFill, netTone } from "../lib/mask";
 import useDragScroll from "../lib/useDragScroll";
 
 /** Tallest bar in the design. Every bar is scaled against the same ceiling. */
@@ -139,10 +139,11 @@ export default function CashFlowSection() {
           <div className="h-px w-full card-dash" />
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-[8px]">
-              {/* The net row gets a swatch of its own now — without one it
-                  read as a footnote to the two rows above rather than as the
-                  third quantity they add up to. */}
-              <div className="size-[12px] shrink-0 rounded-[2px] bg-net" />
+              {/* The swatch reads by sign like the figure does, rather than
+                  carrying a colour of its own. A fixed hue for "net" was a
+                  third category alongside in and out; what this row actually
+                  is, is one of those two winning. */}
+              <div className={`size-[12px] shrink-0 rounded-[2px] ${netFill(net)}`} />
               <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
                 Net cash flow
               </p>

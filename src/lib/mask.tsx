@@ -18,8 +18,28 @@ export const useMasked = () => useContext(MaskContext);
  * colour here has to mean something or it means nothing.
  */
 export function netTone(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value) || value === 0) return "text-ink-dim";
-  return value > 0 ? "text-gain" : "text-loss";
+  const hue = netHue(value);
+  return hue === "level" ? "text-ink-dim" : hue === "gain" ? "text-gain" : "text-loss";
+}
+
+/** The matching swatch fill, so the chip and its figure can never disagree. */
+export function netFill(value: number | null | undefined): string {
+  const hue = netHue(value);
+  return hue === "level" ? "bg-ink-dim" : hue === "gain" ? "bg-gain" : "bg-loss";
+}
+
+/** The CSS custom property, for the places that need a raw colour. */
+export function netVar(value: number | null | undefined): string {
+  const hue = netHue(value);
+  return hue === "level" ? "--color-ink-dim" : hue === "gain" ? "--color-gain" : "--color-loss";
+}
+
+/* Spelled out rather than composed: Tailwind generates utilities by scanning
+   the source for literal class names, so a `bg-${hue}` template would emit
+   classes that never get built. */
+function netHue(value: number | null | undefined): "gain" | "loss" | "level" {
+  if (value == null || Number.isNaN(value) || value === 0) return "level";
+  return value > 0 ? "gain" : "loss";
 }
 
 /** en-IN gives ₹ with Indian digit grouping (₹1,23,456) for free. */

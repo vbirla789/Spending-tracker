@@ -46,7 +46,6 @@
      pair repeats per month so the eye compares heights, not hues. */
   --color-income: #035338;
   --color-expense: #abd37a;
-  --color-net: #7a5286; /* the net row's swatch — neither in nor out */
 
   /* Habits donut. Four fixed hues so a category keeps its colour across
      months; the legend swatch and the arc read from the same token. */

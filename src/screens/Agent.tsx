@@ -16,7 +16,7 @@ import Sphere3D from "../components/Sphere3D";
 import StatusBar from "../components/StatusBar";
 import { answerFor, SUGGESTIONS, type Answer, type AnswerRow } from "../lib/agent";
 import { rupees, signedRupees } from "../lib/format";
-import { netTone } from "../lib/mask";
+import { netFill, netTone } from "../lib/mask";
 
 /** Whose money this is. One constant, so the greeting and anything else
     that addresses the reader can't drift apart. */
@@ -428,11 +428,19 @@ function AgentReply({
                   {/* The net row carries a swatch like the two above it —
                       without one it read as a footnote rather than the
                       third quantity they add up to. */}
-                  {answer.card.total.token && (
+                  {answer.card.total.tone === "net" ? (
                     <div
-                      className="size-[12px] shrink-0 rounded-[2px]"
-                      style={{ background: `var(${answer.card.total.token})` }}
+                      className={`size-[12px] shrink-0 rounded-[2px] ${netFill(
+                        answer.card.total.value,
+                      )}`}
                     />
+                  ) : (
+                    answer.card.total.token && (
+                      <div
+                        className="size-[12px] shrink-0 rounded-[2px]"
+                        style={{ background: `var(${answer.card.total.token})` }}
+                      />
+                    )
                   )}
                   <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
                     {answer.card.total.label}

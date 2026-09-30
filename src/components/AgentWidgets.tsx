@@ -3,7 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { AUG_DAILY, CASH_FLOW, DAILY_SPEND, HABITS, JUL_DAILY, RING_ORDER } from "../data";
 import { donutArcs } from "../lib/chart";
 import { rupees, sum } from "../lib/format";
-import Money from "../lib/mask";
+import Money, { netVar } from "../lib/mask";
 
 /**
  * The interactive bodies of Sonar's answers.
@@ -455,7 +455,7 @@ export function FlowBar() {
   const parts = [
     { key: "in", value: month.income, token: "--color-income" },
     { key: "out", value: month.expenses, token: "--color-expense" },
-    { key: "net", value: Math.abs(net), token: "--color-net" },
+    { key: "net", value: Math.abs(net), token: netVar(net) },
   ];
   const total = sum(parts.map((p) => p.value));
 

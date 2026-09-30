@@ -178,7 +178,7 @@ export function answerFor(question: string): Answer {
           probe: "Where did my money go?",
         },
       ],
-      total: { label: "Net cash flow", value: net, signed: true, token: "--color-net", tone: "net" },
+      total: { label: "Net cash flow", value: net, signed: true, tone: "net" },
     },
     followUps: ["Where did my money go?", "How does this month compare?"],
   };
