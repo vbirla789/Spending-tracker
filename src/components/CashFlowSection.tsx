@@ -143,7 +143,7 @@ export default function CashFlowSection() {
                   carrying a colour of its own. A fixed hue for "net" was a
                   third category alongside in and out; what this row actually
                   is, is one of those two winning. */}
-              <div className={`size-[12px] shrink-0 rounded-[2px] ${netFill(net)}`} />
+              <div className={`size-[12px] shrink-0 ${netFill(net)}`} />
               <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
                 Net cash flow
               </p>
@@ -167,7 +167,7 @@ function Row({ swatch, label, value }: { swatch: string; label: string; value: n
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-[8px]">
-        <div className={`size-[12px] shrink-0 rounded-[2px] ${swatch}`} />
+        <div className={`size-[12px] shrink-0 ${swatch}`} />
         <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">
           {label}
         </p>

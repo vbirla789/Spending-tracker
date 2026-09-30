@@ -169,7 +169,7 @@ export default function HabitsCard() {
                 <div className="flex w-full items-center justify-between">
                   <div className="flex items-center gap-[8px]">
                     <div
-                      className="size-[12px] shrink-0 rounded-[2px]"
+                      className="size-[12px] shrink-0"
                       style={{ background: `var(${cat.token})` }}
                     />
                     <p className="font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[0.6px] text-black">

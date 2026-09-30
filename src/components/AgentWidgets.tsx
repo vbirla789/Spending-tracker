@@ -113,7 +113,7 @@ export function WhatIfCard({ catKey }: { catKey: string }) {
             controls. The native input is stretched invisibly across the
             whole band, so keyboard and screen-reader behaviour stay stock. */}
         <div className="relative flex h-[24px] w-full items-center">
-          <div className="relative h-[14px] w-full overflow-hidden rounded-[2px]">
+          <div className="relative h-[14px] w-full overflow-hidden">
             {/* Faded base = the whole category; the solid band anchored right
                 is what survives. What the handle has passed reads as gone. */}
             <div className="absolute inset-0 opacity-25" style={{ background: `var(${cat.token})` }} />
@@ -464,7 +464,7 @@ export function FlowBar() {
       {parts.map((p, i) => (
         <motion.div
           key={p.key}
-          className="h-full rounded-[3px]"
+          className="h-full"
           style={{ background: `var(${p.token})` }}
           initial={{ width: 0 }}
           animate={{ width: `${(p.value / total) * 100}%` }}
@@ -566,7 +566,7 @@ export function CategoryRing({ onAsk }: { onAsk: (q: string) => void }) {
               >
                 <div className="flex items-center gap-[8px]">
                   <motion.div
-                    className="size-[12px] shrink-0 rounded-[2px]"
+                    className="size-[12px] shrink-0"
                     style={{ background: `var(${cat.token})` }}
                     initial={false}
                     animate={{ opacity: on ? 1 : 0.35 }}
@@ -656,7 +656,7 @@ export function CategoryTrend({ catKey }: { catKey: string }) {
                 className="flex h-full flex-1 flex-col items-center justify-end gap-[8px]"
               >
                 <motion.div
-                  className="w-full rounded-[2px]"
+                  className="w-full"
                   style={{ background: `var(${cat.token})` }}
                   initial={{ height: 0 }}
                   animate={{

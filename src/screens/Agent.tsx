@@ -430,14 +430,14 @@ function AgentReply({
                       third quantity they add up to. */}
                   {answer.card.total.tone === "net" ? (
                     <div
-                      className={`size-[12px] shrink-0 rounded-[2px] ${netFill(
+                      className={`size-[12px] shrink-0 ${netFill(
                         answer.card.total.value,
                       )}`}
                     />
                   ) : (
                     answer.card.total.token && (
                       <div
-                        className="size-[12px] shrink-0 rounded-[2px]"
+                        className="size-[12px] shrink-0"
                         style={{ background: `var(${answer.card.total.token})` }}
                       />
                     )
@@ -500,7 +500,7 @@ function Row({ row, onAsk }: { row: AnswerRow; onAsk: (q: string) => void }) {
       <div className="flex items-center gap-[8px]">
         {row.token && (
           <span
-            className="size-[12px] shrink-0 rounded-[2px]"
+            className="size-[12px] shrink-0"
             style={{ background: `var(${row.token})` }}
           />
         )}
