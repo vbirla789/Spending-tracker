@@ -51,7 +51,7 @@ export type Answer = {
  * so the prompts have to advertise that.
  */
 export const SUGGESTIONS = [
-  "Where did my money go?",
+  "What am I spending most on?",
   "What if I cut food & dining?",
   "How does this month compare?",
   "What if I keep saving like this?",
@@ -95,7 +95,7 @@ export function answerFor(question: string): Answer {
         saved * 12,
       )} over a year.\n\nBut half is just a starting point — drag it:`,
       widget: { kind: "whatif", catKey: cat.key },
-      followUps: ["Where did my money go?", QUESTION_OF_THE_DAY],
+      followUps: ["What am I spending most on?", QUESTION_OF_THE_DAY],
     };
   }
 
@@ -112,12 +112,18 @@ export function answerFor(question: string): Answer {
         change >= 0 ? "up" : "down"
       } ${rupees(change)} on ${history[1].label}.\n\nTap a month to compare it against the one before:`,
       widget: { kind: "trend", catKey: cat.key },
-      followUps: [`Cut ${cat.label.toLowerCase()} in half?`, "Where did my money go?"],
+      followUps: [`Cut ${cat.label.toLowerCase()} in half?`, "What am I spending most on?"],
     };
   }
 
   // 3. The full spending split
-  if (q.includes("money go") || q.includes("spend on") || q.includes("split")) {
+  if (
+    q.includes("spending most") ||
+    q.includes("most on") ||
+    q.includes("money go") ||
+    q.includes("spend on") ||
+    q.includes("split")
+  ) {
     const habits = thisMonth();
     const total = sum(habits.categories.map((c) => c.amount));
     const top = [...habits.categories].sort((a, b) => b.amount - a.amount)[0];
@@ -142,7 +148,7 @@ export function answerFor(question: string): Answer {
         month.income,
       )} — that's ${Math.round((net / month.income) * 100)}%.\n\nStretch it out and see what that's worth:`,
       widget: { kind: "projection" },
-      followUps: ["Where did my money go?", "How does this month compare?"],
+      followUps: ["What am I spending most on?", "How does this month compare?"],
     };
   }
 
@@ -156,7 +162,7 @@ export function answerFor(question: string): Answer {
         diff >= 0 ? "more" : "less"
       } than by this point in Aug.\n\nDay by day. The legend is a filter — bring Jul in for a second baseline:`,
       widget: { kind: "monthline" },
-      followUps: ["Where did my money go?", "What if I keep saving like this?"],
+      followUps: ["What am I spending most on?", "What if I keep saving like this?"],
     };
   }
 
@@ -175,11 +181,11 @@ export function answerFor(question: string): Answer {
           label: "Expenses",
           value: -month.expenses,
           token: "--color-expense",
-          probe: "Where did my money go?",
+          probe: "What am I spending most on?",
         },
       ],
       total: { label: "Net cash flow", value: net, signed: true, tone: "net" },
     },
-    followUps: ["Where did my money go?", "How does this month compare?"],
+    followUps: ["What am I spending most on?", "How does this month compare?"],
   };
 }

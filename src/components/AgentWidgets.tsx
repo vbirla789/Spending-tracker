@@ -484,7 +484,7 @@ const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_GAP = 5;
 
 /**
- * "Where did my money go?" as a ring you can question rather than a table
+ * "What am I spending most on?" as a ring you can question rather than a table
  * you read down.
  *
  * Tap an arc or a row and the centre becomes that category — its share, its
