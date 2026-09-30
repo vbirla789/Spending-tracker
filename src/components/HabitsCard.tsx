@@ -70,7 +70,10 @@ export default function HabitsCard() {
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={`Month: ${month.label}. Change month`}
-                className="flex items-center justify-center gap-[4px] rounded-[40px] border border-hair py-[6px] pl-[12px] pr-[8px] font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[1px] text-black"
+                /* White fill, not transparent: the header band it sits in is
+                   tinted now, so a see-through pill sank into it. A control
+                   has to look liftable. */
+                className="flex items-center justify-center gap-[4px] rounded-[40px] border border-hair bg-white py-[6px] pl-[12px] pr-[8px] font-mono text-[12px] font-medium uppercase leading-[1.4] tracking-[1px] text-black"
               >
                 {month.label}
                 <motion.img
